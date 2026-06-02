@@ -119,4 +119,108 @@ class GeminiService
             'expiry_date' => $expiryDate,
         ];
     }
+
+    /**
+     * Generate an adapted lesson plan packet using Gemini AI.
+     */
+    public function generateAdaptedLessonPlan(string $subject, string $gradeLevel, ?string $notesText, ?string $filePath = null): array
+    {
+        if (empty($this->apiKey) || $this->apiKey === 'mock') {
+            return $this->getMockLessonPlan($subject, $gradeLevel, $notesText);
+        }
+
+        try {
+            $prompt = "You are an expert substitute teacher assistant. Your task is to generate a comprehensive lesson adaptation packet to help a substitute teacher prepare for a class.
+            Class Subject: {$subject}
+            Grade Level: {$gradeLevel}
+            Original Lesson Notes/Context: " . ($notesText ?: "No notes provided. Generate a generic standard lesson plan for this subject and grade.");
+
+            $prompt .= "\n\nPlease generate a JSON object with the following keys:
+            1. 'summary': A 2-3 sentence overview of what the substitute should focus on and prepare for.
+            2. 'quizzes': A list of exactly 10 multiple-choice questions suitable for this subject and grade. Each question must be an object containing:
+               - 'question': The question text.
+               - 'options': An array of exactly 4 strings representing choices (A, B, C, D).
+               - 'answer': The correct option string (matching one of the options).
+            3. 'icebreakers': A list of exactly 3 quick classroom icebreaker activities or games suitable for this grade level.
+
+            Respond ONLY with a valid JSON block containing these keys. Do not include markdown wrappers like ```json.";
+
+            $parts = [
+                ['text' => $prompt]
+            ];
+
+            if ($filePath && file_exists($filePath)) {
+                $fileData = base64_encode(file_get_contents($filePath));
+                $mimeType = mime_content_type($filePath) ?: 'application/pdf';
+                $parts[] = [
+                    'inlineData' => [
+                        'mimeType' => $mimeType,
+                        'data' => $fileData,
+                    ]
+                ];
+            }
+
+            $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$this->apiKey}", [
+                'contents' => [
+                    [
+                        'parts' => $parts
+                    ]
+                ],
+                'generationConfig' => [
+                    'responseMimeType' => 'application/json'
+                ]
+            ]);
+
+            if ($response->failed()) {
+                Log::error("Gemini lesson plan API call failed: " . $response->body());
+                return $this->getMockLessonPlan($subject, $gradeLevel, $notesText);
+            }
+
+            $result = $response->json();
+            $textResponse = $result['candidates'][0]['content']['parts'][0]['text'] ?? '';
+
+            $data = json_decode(trim($textResponse), true);
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+                Log::warning("Gemini did not return valid JSON for lesson plan: " . $textResponse);
+                return $this->getMockLessonPlan($subject, $gradeLevel, $notesText);
+            }
+
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error("Error in Gemini lesson plan adaptation: " . $e->getMessage());
+            return $this->getMockLessonPlan($subject, $gradeLevel, $notesText);
+        }
+    }
+
+    /**
+     * Provide mock lesson plan packet.
+     */
+    protected function getMockLessonPlan(string $subject, string $gradeLevel, ?string $notesText): array
+    {
+        $summary = "This is an AI-adapted lesson plan for {$gradeLevel} {$subject} to ensure continuity. " .
+                   "The focus is on maintaining classroom engagement and reinforcing core concepts outlined in: '" . 
+                   ($notesText ?: 'General curriculum instructions') . "'.";
+
+        $quizzes = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $quizzes[] = [
+                'question' => "What is mock question number {$i} for {$subject} ({$gradeLevel})?",
+                'options' => ["Option A", "Option B", "Option C", "Option D"],
+                'answer' => "Option A",
+            ];
+        }
+
+        $icebreakers = [
+            "Introductory Quick-Fire: Ask students to call out one word they associate with {$subject}.",
+            "Partner Share: Students turn to their neighbor and explain how {$subject} is used in daily life.",
+            "Subject Hangman: A short word game on the board using key vocabulary terms related to {$gradeLevel} {$subject}."
+        ];
+
+        return [
+            'summary' => $summary,
+            'quizzes' => $quizzes,
+            'icebreakers' => $icebreakers,
+        ];
+    }
 }

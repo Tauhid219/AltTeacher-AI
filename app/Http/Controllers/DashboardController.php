@@ -9,6 +9,7 @@ use App\Models\SubstituteJob;
 use App\Models\Booking;
 use App\Models\Timesheet;
 use App\Models\Credential;
+use App\Models\LessonPlan;
 use App\Services\GeminiService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -101,7 +102,13 @@ class DashboardController extends Controller
             'start_time' => 'required',
             'end_time' => 'required|after:start_time',
             'description' => 'nullable|string',
+            'lesson_plan_file' => 'nullable|file|max:5000|mimes:pdf,docx,txt,jpeg,jpg,png',
         ]);
+
+        $filePath = null;
+        if ($request->hasFile('lesson_plan_file')) {
+            $filePath = $request->file('lesson_plan_file')->store('lesson_plans', 'public');
+        }
 
         $schoolProfile = auth()->user()->schoolProfile;
 
@@ -114,6 +121,7 @@ class DashboardController extends Controller
             'end_time' => $request->end_time,
             'status' => 'open',
             'description' => $request->description,
+            'lesson_plan_file' => $filePath,
         ]);
 
         return redirect()->route('school.dashboard')->with('success', 'Substitute teacher request posted successfully!');
@@ -270,7 +278,7 @@ class DashboardController extends Controller
         }
 
         // Create Booking
-        Booking::create([
+        $booking = Booking::create([
             'substitute_job_id' => $job->id,
             'teacher_profile_id' => $teacherProfile->id,
             'status' => 'confirmed',
@@ -279,7 +287,28 @@ class DashboardController extends Controller
         // Update job status
         $job->update(['status' => 'filled']);
 
-        return redirect()->route('teacher.dashboard')->with('success', 'Job booked successfully! It has been added to your schedule.');
+        // Generate and store AI Adapted Lesson Plan
+        $geminiService = app(GeminiService::class);
+        $filePath = $job->lesson_plan_file ? storage_path('app/public/' . $job->lesson_plan_file) : null;
+        
+        $aiAdaptedData = $geminiService->generateAdaptedLessonPlan(
+            $job->subject,
+            $job->grade_level,
+            $job->description,
+            $filePath
+        );
+
+        LessonPlan::create([
+            'booking_id' => $booking->id,
+            'original_plan_text' => $job->description ?: 'No text notes provided.',
+            'ai_summary' => $aiAdaptedData['summary'] ?? null,
+            'ai_generated_activities' => [
+                'quizzes' => $aiAdaptedData['quizzes'] ?? [],
+                'icebreakers' => $aiAdaptedData['icebreakers'] ?? [],
+            ],
+        ]);
+
+        return redirect()->route('teacher.dashboard')->with('success', 'Job booked successfully! AI has prepared your classroom prep packet.');
     }
 
     /**
@@ -341,5 +370,28 @@ class DashboardController extends Controller
         }
 
         return redirect()->route('teacher.dashboard')->with('success', 'Credential uploaded and parsed successfully by AI Auditor!');
+    }
+
+    /**
+     * Download AI Adapted Lesson Plan as a PDF.
+     */
+    public function downloadLessonPlanPdf(int $bookingId): \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+    {
+        $teacherProfile = auth()->user()->teacherProfile;
+        if (!$teacherProfile) {
+            return redirect()->route('teacher.dashboard')->with('error', 'Profile not found.');
+        }
+
+        $booking = Booking::with(['substituteJob.schoolProfile', 'lessonPlan'])
+            ->where('teacher_profile_id', $teacherProfile->id)
+            ->findOrFail($bookingId);
+
+        $lessonPlan = $booking->lessonPlan;
+        if (!$lessonPlan) {
+            return redirect()->back()->with('error', 'Lesson plan not found.');
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.lesson_plan', compact('booking', 'lessonPlan'));
+        return $pdf->download("lesson_plan_booking_{$booking->id}.pdf");
     }
 }

@@ -143,6 +143,76 @@
                 </div>
             </div>
 
+            <!-- My Booked Jobs Card -->
+            <div class="card card-outline card-success mt-3">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-calendar-check mr-1 text-success"></i> 
+                        My Scheduled Bookings
+                    </h3>
+                    <div class="card-tools">
+                        <span class="badge badge-success">{{ count($bookings) }} Booking(s)</span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Subject & Grade</th>
+                                    <th>School</th>
+                                    <th>Date & Time</th>
+                                    <th class="text-right">Classroom Prep</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($bookings as $booking)
+                                    <tr>
+                                        <td>
+                                            <span class="badge badge-success mb-1">{{ $booking->substituteJob->grade_level }}</span>
+                                            <h6 class="mb-0 text-bold">{{ $booking->substituteJob->subject }}</h6>
+                                        </td>
+                                        <td>
+                                            <div class="text-bold">{{ $booking->substituteJob->schoolProfile->school_name }}</div>
+                                            <small class="text-muted">{{ $booking->substituteJob->schoolProfile->address }}</small>
+                                        </td>
+                                        <td>
+                                            <div>{{ \Carbon\Carbon::parse($booking->substituteJob->date)->format('M d, Y') }}</div>
+                                            <small class="text-muted">{{ \Carbon\Carbon::parse($booking->substituteJob->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($booking->substituteJob->end_time)->format('h:i A') }}</small>
+                                        </td>
+                                        <td class="text-right align-middle">
+                                            @if($booking->lessonPlan)
+                                                <button class="btn btn-info btn-xs font-weight-bold view-prep-btn" 
+                                                        data-toggle="modal" 
+                                                        data-target="#prepModal"
+                                                        data-subject="{{ $booking->substituteJob->subject }}"
+                                                        data-grade="{{ $booking->substituteJob->grade_level }}"
+                                                        data-school="{{ $booking->substituteJob->schoolProfile->school_name }}"
+                                                        data-summary="{{ $booking->lessonPlan->ai_summary }}"
+                                                        data-quizzes="{{ json_encode($booking->lessonPlan->ai_generated_activities['quizzes'] ?? []) }}"
+                                                        data-icebreakers="{{ json_encode($booking->lessonPlan->ai_generated_activities['icebreakers'] ?? []) }}"
+                                                        data-export-url="{{ route('teacher.lesson_plan.pdf', $booking->id) }}">
+                                                    <i class="fas fa-magic mr-1"></i> View Prep Packet
+                                                </button>
+                                            @else
+                                                <span class="text-muted text-xs font-italic">No Packet Available</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center p-4 text-muted">
+                                            <i class="fas fa-calendar-times mb-2 fa-lg text-secondary"></i>
+                                            <p class="mb-0">You have no booked jobs yet. Browse and book matching jobs above!</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- Calendar Card -->
             <div class="card card-outline card-success" id="calendar-card">
                 <div class="card-header">
@@ -320,6 +390,47 @@
             </div>
         </div>
     </div>
+    <!-- Modal for Classroom Prep Packet -->
+    <div class="modal fade" id="prepModal" tabindex="-1" aria-labelledby="prepModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="border-radius: 8px; overflow: hidden; border: none;">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title font-weight-bold" id="prepModalLabel"><i class="fas fa-magic mr-1"></i> AI Adapted Classroom Prep Packet</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="background-color: #f8f9fa;">
+                    <h6 class="text-bold text-success border-bottom pb-2 mb-3" id="prep-modal-header">Classroom Details</h6>
+                    
+                    <div class="mb-4">
+                        <label class="text-xs text-muted font-weight-bold uppercase tracking-wider d-block mb-1">AI Lesson Summary</label>
+                        <div class="p-3 bg-white rounded text-sm border-left border-success" id="prep-modal-summary" style="border-left-width: 4px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            Summary goes here...
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="text-xs text-muted font-weight-bold uppercase tracking-wider d-block mb-1">Quick Icebreaker Games (3 Activities)</label>
+                        <div id="prep-modal-icebreakers">
+                            <!-- list of games -->
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="text-xs text-muted font-weight-bold uppercase tracking-wider d-block mb-1">Lesson Continuity Quiz (10 Questions)</label>
+                        <div id="prep-modal-quizzes" style="max-height: 250px; overflow-y: auto;" class="p-2 border rounded bg-white">
+                            <!-- quiz list -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light justify-content-between">
+                    <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">Close</button>
+                    <a href="#" id="prep-modal-download-btn" class="btn btn-success font-weight-bold"><i class="fas fa-file-pdf mr-1"></i> Export to PDF</a>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
@@ -357,6 +468,61 @@
             $('.custom-file-input').on('change', function() {
                 let fileName = $(this).val().split('\\').pop();
                 $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+
+            // View Prep Modal Dynamic Populator
+            $(document).on('click', '.view-prep-btn', function() {
+                const subject = $(this).data('subject');
+                const grade = $(this).data('grade');
+                const school = $(this).data('school');
+                const summary = $(this).data('summary');
+                const quizzes = $(this).data('quizzes');
+                const icebreakers = $(this).data('icebreakers');
+                const downloadUrl = $(this).data('export-url');
+
+                $('#prep-modal-header').html(`<i class="fas fa-school mr-1"></i> ${school} &mdash; ${grade} ${subject}`);
+                $('#prep-modal-summary').text(summary || 'No summary generated.');
+                
+                // Render Icebreakers
+                let icebreakerHtml = '';
+                if (Array.isArray(icebreakers) && icebreakers.length > 0) {
+                    icebreakers.forEach((game, index) => {
+                        icebreakerHtml += `
+                            <div class="p-2 mb-2 border rounded bg-white" style="box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                <strong class="text-success text-xs">Activity ${index + 1}</strong>
+                                <div class="text-sm mt-1 text-secondary">${game}</div>
+                            </div>`;
+                    });
+                } else {
+                    icebreakerHtml = '<div class="text-muted text-xs italic p-2">No activities generated.</div>';
+                }
+                $('#prep-modal-icebreakers').html(icebreakerHtml);
+
+                // Render Quizzes
+                let quizHtml = '';
+                if (Array.isArray(quizzes) && quizzes.length > 0) {
+                    quizzes.forEach((quiz, index) => {
+                        let optionsHtml = '';
+                        const labels = ['A', 'B', 'C', 'D'];
+                        if (Array.isArray(quiz.options)) {
+                            quiz.options.forEach((opt, optIndex) => {
+                                optionsHtml += `<div class="col-6 text-xs text-muted mb-1"><strong>${labels[optIndex]}.</strong> ${opt}</div>`;
+                            });
+                        }
+                        quizHtml += `
+                            <div class="p-2 mb-2 border-bottom">
+                                <div class="text-sm font-weight-bold text-dark">${index + 1}. ${quiz.question}</div>
+                                <div class="row mt-1">${optionsHtml}</div>
+                                <div class="text-xs text-success mt-1"><strong>Correct Answer:</strong> ${quiz.answer}</div>
+                            </div>`;
+                    });
+                } else {
+                    quizHtml = '<div class="text-muted text-xs italic p-2">No quiz questions generated.</div>';
+                }
+                $('#prep-modal-quizzes').html(quizHtml);
+
+                // Update download URL
+                $('#prep-modal-download-btn').attr('href', downloadUrl);
             });
         });
     </script>

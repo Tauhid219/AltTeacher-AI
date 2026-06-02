@@ -130,7 +130,7 @@
                     <h3 class="card-title"><i class="fas fa-plus mr-1"></i> Post Substitute Job</h3>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('school.jobs.store') }}" method="POST">
+                    <form action="{{ route('school.jobs.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="form-group">
                             <label for="subject">Subject</label>
@@ -181,10 +181,29 @@
                             <label for="description">Description & Lesson Continuity Notes</label>
                             <textarea name="description" class="form-control" id="description" rows="3" placeholder="Provide topic outline, classroom rules..."></textarea>
                         </div>
+                        <div class="form-group">
+                            <label for="lesson_plan_file">Upload Lesson Plan (PDF/DOCX/TXT - Optional)</label>
+                            <div class="custom-file">
+                                <input type="file" name="lesson_plan_file" class="custom-file-input" id="lesson_plan_file">
+                                <label class="custom-file-label" for="lesson_plan_file">Choose file</label>
+                            </div>
+                            <small class="form-text text-muted">The AI will adapt this document for the substitute teacher.</small>
+                        </div>
                         <button type="submit" class="btn btn-success btn-block"><i class="fas fa-paper-plane mr-1"></i> Post Job</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+    <script>
+        $(document).ready(function() {
+            $('.custom-file-input').on('change', function() {
+                let fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+        });
+    </script>
 @endsection

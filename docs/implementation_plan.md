@@ -57,9 +57,9 @@ Here is the phase-by-phase development plan. We will execute one phase at a time
 - `[x]` Setup automatic compliance check (flagging expired licenses or blocking bookings for non-compliant teachers).
 
 ### Phase 6: AI-Assisted Lesson Continuity & Classroom Prep
-- `[ ]` Build lesson plan upload system for School Admins when booking jobs.
-- `[ ]` Create AI Lesson Adaptation helper using Gemini API (generating summaries, 10 quiz questions, and 3 classroom icebreaker games from the original lesson notes).
-- `[ ]` Add PDF export feature for the AI-generated classroom prep files.
+- `[x]` Build lesson plan upload system for School Admins when booking jobs.
+- `[x]` Create AI Lesson Adaptation helper using Gemini API (generating summaries, 10 quiz questions, and 3 classroom icebreaker games from the original lesson notes).
+- `[x]` Add PDF export feature for the AI-generated classroom prep files.
 
 ### Phase 7: Payroll Tracking & Timesheets
 - `[ ]` Implement digital check-in and check-out system for teachers on their booking pages.

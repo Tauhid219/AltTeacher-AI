@@ -158,3 +158,38 @@ We implemented automated credential scanning and verification using the Gemini A
 Tests:    46 passed (170 assertions)
 Duration: 5.35s
 ```
+
+---
+
+## Phase 6: AI-Assisted Lesson Continuity & Classroom Prep
+We built an automated system that prepares substitute teachers for booked classes using Gemini AI analysis and exports prep packets to PDF format:
+
+### 1. Optional Lesson Plan Posting
+- Updated the School Admin dashboard to allow uploading an optional lesson plan file (PDF, DOCX, TXT, or images) when posting a new substitute job.
+- Added file input field with dynamic Bootstrap label updating (using jQuery) to show the selected file's basename.
+
+### 2. Automatic AI Adaptations on Booking
+- Modified the booking process: upon confirmation, the platform automatically triggers the Gemini AI model (`gemini-1.5-flash`) via the [GeminiService](file:///c:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/app/Services/GeminiService.php) to analyze the uploaded file and the job's description.
+- Generates a structured JSON continuity packet containing:
+  - **Summary**: A concise 2-3 sentence overview of what the substitute should focus on.
+  - **Quizzes**: A list of exactly 10 multiple-choice questions suitable for the class grade and subject.
+  - **Icebreakers**: Exactly 3 quick classroom icebreaker activities.
+- Saves the results to the `lesson_plans` table associated with the booking.
+
+### 3. Teacher Dashboard Integration & Modal
+- Added a "My Scheduled Bookings" section to the Teacher Dashboard where teachers can click a "View Prep Packet" button.
+- Populates an AdminLTE modal dynamically using jQuery, displaying the AI-adapted summary, 10 quiz questions (along with choices and correct answers), and the 3 icebreakers.
+
+### 4. PDF Export Generation
+- Installed `barryvdh/laravel-dompdf` package to support HTML-to-PDF rendering.
+- Created a beautifully styled PDF blade template [pdf/lesson_plan.blade.php](file:///c:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/resources/views/pdf/lesson_plan.blade.php) featuring standard school headers, a metadata table, page-break safeguards, and clean section groupings.
+- Added a download endpoint `/teacher/booking/{id}/pdf` to generate and download the adapted lesson prep packet.
+
+### 5. Verified with Feature Tests
+- Authored [LessonAdaptationTest.php](file:///c:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/tests/Feature/LessonAdaptationTest.php) to verify school admin job posting with files, booking plan generation, structure validation, and PDF download integrity.
+- Ran all 49 tests in the test suite and confirmed all passed successfully:
+```bash
+Tests:    49 passed (198 assertions)
+Duration: 10.37s
+```
+

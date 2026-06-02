@@ -18,6 +18,7 @@ class SubstituteJob extends Model
         'date',
         'status',
         'description',
+        'lesson_plan_file',
     ];
 
     protected $casts = [
