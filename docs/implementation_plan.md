@@ -37,12 +37,12 @@ Here is the phase-by-phase development plan. We will execute one phase at a time
 - `[x]` Setup Role-based redirect middleware to route logged-in users to their respective dashboards.
 
 ### Phase 3: AdminLTE Integration & Theme Switcher (Portals)
-- `[ ]` Copy static files/assets (CSS, JS, plugins) from `C:\Reza\Tauhid\Templates\AdminLTE-3.1.0` to `public/vendor/adminlte`.
-- `[ ]` Create a reusable Blade layout matching the AdminLTE structure (Sidebar, Navbar, Footer, Main Content) with full viewport style.
-- `[ ]` Implement the Theme Switcher in the AdminLTE layout supporting **Light, Dark, and System** options using localStorage and custom JS.
-- `[ ]` Integrate the School Admin Dashboard and District Admin Dashboard views into this layout.
-- `[ ]` Build Job Posting management for School Admins (Create, read, update, delete jobs).
-- `[ ]` Build District Admin view to review teacher onboarding checklist, credentials, and approve/reject them.
+- `[x]` Copy static files/assets (CSS, JS, plugins) from `C:\Reza\Tauhid\Templates\AdminLTE-3.1.0` to `public/vendor/adminlte`.
+- `[x]` Create a reusable Blade layout matching the AdminLTE structure (Sidebar, Navbar, Footer, Main Content) with full viewport style.
+- `[x]` Implement the Theme Switcher in the AdminLTE layout supporting **Light, Dark, and System** options using localStorage and custom JS.
+- `[x]` Integrate the School Admin Dashboard and District Admin Dashboard views into this layout.
+- `[x]` Build Job Posting management for School Admins (Create, read, update, delete jobs).
+- `[x]` Build District Admin view to review teacher onboarding checklist, credentials, and approve/reject them.
 
 ### Phase 4: Teacher Portal & Preference Matching Engine
 - `[ ]` Build Teacher Dashboard layout using AdminLTE structure.

@@ -81,3 +81,30 @@ Updated [DatabaseSeeder.php](file:///C:/xampp/htdocs/My%20Works/Infinity%20AI%20
 Tests:    31 passed (94 assertions)
 Duration: 21.89s
 ```
+
+---
+
+## Phase 3: AdminLTE Integration & Theme Switcher (Portals)
+We integrated the AdminLTE Bootstrap template and built a persistent Light/Dark/System theme switcher:
+
+### 1. Assets Copying & Reusable Layout
+- **Asset Directory:** AdminLTE assets (`dist` and `plugins` directories) were copied to [public/vendor/adminlte](file:///C:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/public/vendor/adminlte).
+- **Layout Structure:** Created the reusable admin shell [admin.blade.php](file:///C:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/resources/views/layouts/admin.blade.php) featuring standard AdminLTE layout headers, left-navigation, breadcrumbs, content yields, flash notifications, and footers.
+
+### 2. Interactive Theme Switcher
+- Implemented a Javascript-based theme switcher supporting **Light**, **Dark**, and **System** themes.
+- Utilized `localStorage` to persist user choices across session refreshes.
+- Integrated an inline self-executing CSS injection script in the header block to load classes immediately and prevent page flash on page-load.
+
+### 3. School and District Dashboards
+- **School Dashboard:** Implemented [school/dashboard.blade.php](file:///C:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/resources/views/school/dashboard.blade.php). Displays metrics (open postings, filled bookings, available subs, monthly expenses), lists current postings, and provides a form to request substitute teacher jobs.
+- **District Dashboard:** Implemented [district/dashboard.blade.php](file:///C:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/resources/views/district/dashboard.blade.php). Displays district-wide summary counts, payroll expenditures, and a grid showing registered teacher candidates, licenses, verification logs, and quick action Approve/Reject forms.
+- **Dashboard Controller:** Authored [DashboardController.php](file:///C:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/app/Http/Controllers/DashboardController.php) to calculate metrics and process jobs creation and onboarding approvals.
+
+### 4. Verification with Tests
+- Created [DashboardTest.php](file:///C:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/tests/Feature/DashboardTest.php) to assert dashboard access authorization, job posting limits, and candidate status transitioning.
+- All 34 tests passed successfully:
+```bash
+Tests:    34 passed (110 assertions)
+Duration: 5.74s
+```

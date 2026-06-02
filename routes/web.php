@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -20,20 +21,19 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth', 'role:district_admin'])->prefix('district')->name('district.')->group(function () {
-    Route::get('/dashboard', function () {
-        return "District Admin Dashboard - Layout & Dark/Light theme will be integrated in Phase 3";
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'districtDashboard'])->name('dashboard');
+    Route::post('/approve/{id}', [DashboardController::class, 'approveTeacher'])->name('approve');
+    Route::post('/reject/{id}', [DashboardController::class, 'rejectTeacher'])->name('reject');
 });
 
 Route::middleware(['auth', 'role:school_admin'])->prefix('school')->name('school.')->group(function () {
-    Route::get('/dashboard', function () {
-        return "School Admin Dashboard - Layout & Dark/Light theme will be integrated in Phase 3";
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'schoolDashboard'])->name('dashboard');
+    Route::post('/jobs', [DashboardController::class, 'storeJob'])->name('jobs.store');
 });
 
 Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('/dashboard', function () {
-        return "Substitute Teacher Dashboard - Layout & Dark/Light theme will be integrated in Phase 3";
+        return "Substitute Teacher Dashboard - Layout & Dark/Light theme will be integrated in Phase 4";
     })->name('dashboard');
 });
 
