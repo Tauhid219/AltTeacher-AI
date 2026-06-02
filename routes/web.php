@@ -32,9 +32,9 @@ Route::middleware(['auth', 'role:school_admin'])->prefix('school')->name('school
 });
 
 Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
-    Route::get('/dashboard', function () {
-        return "Substitute Teacher Dashboard - Layout & Dark/Light theme will be integrated in Phase 4";
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'teacherDashboard'])->name('dashboard');
+    Route::post('/preferences', [DashboardController::class, 'updatePreferences'])->name('preferences.update');
+    Route::post('/book/{id}', [DashboardController::class, 'bookJob'])->name('book');
 });
 
 Route::middleware('auth')->group(function () {

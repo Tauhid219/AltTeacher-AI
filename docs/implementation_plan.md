@@ -45,10 +45,10 @@ Here is the phase-by-phase development plan. We will execute one phase at a time
 - `[x]` Build District Admin view to review teacher onboarding checklist, credentials, and approve/reject them.
 
 ### Phase 4: Teacher Portal & Preference Matching Engine
-- `[ ]` Build Teacher Dashboard layout using AdminLTE structure.
-- `[ ]` Implement Classroom Preferences management form (grades, subjects, schools).
-- `[ ]` Implement Job Matching Engine (matching active jobs with teacher preferences, availability, and onboarding status).
-- `[ ]` Build Calendar view showing booking schedules using FullCalendar.js inside the AdminLTE dashboard.
+- `[x]` Build Teacher Dashboard layout using AdminLTE structure.
+- `[x]` Implement Classroom Preferences management form (grades, subjects, schools).
+- `[x]` Implement Job Matching Engine (matching active jobs with teacher preferences, availability, and onboarding status).
+- `[x]` Build Calendar view showing booking schedules using FullCalendar.js inside the AdminLTE dashboard.
 
 ### Phase 5: AI-Assisted Document Verification & Onboarding
 - `[ ]` Create document upload form for Teacher Credentials (teaching license, ID, background checks).

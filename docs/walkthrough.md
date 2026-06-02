@@ -108,3 +108,28 @@ We integrated the AdminLTE Bootstrap template and built a persistent Light/Dark/
 Tests:    34 passed (110 assertions)
 Duration: 5.74s
 ```
+
+---
+
+## Phase 4: Teacher Portal & Preference Matching Engine
+We built a comprehensive workspace for substitute teachers, matching available job postings with their grade level, subject matter, and school preferences:
+
+### 1. Teacher Portal View
+- **Dashboard Layout:** Developed [teacher/dashboard.blade.php](file:///c:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/resources/views/teacher/dashboard.blade.php) extending the AdminLTE master layout.
+- **Onboarding Banner Alerts:** Implemented warning and status indicators. If the teacher's profile is in a `pending` or `rejected` state, they are blocked from viewing or booking jobs.
+- **Preferences Controls:** Created form elements to configure desired hourly rates, preferred grade-levels (Grade 1-12 checkboxes), preferred subjects (multi-select checkboxes), and preferred schools.
+
+### 2. Preference Matching Engine
+- **Real-time Filtering:** Developed filtering logic inside [DashboardController.php](file:///c:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/app/Http/Controllers/DashboardController.php). It retrieves all open jobs and displays only those matching the teacher's classroom grade levels, subjects, and school preferences.
+- **Booking Actions:** Added instant booking triggers which link the teacher's profile to the job, update the job status to `filled`, and register the booking record.
+
+### 3. Booking Calendar Integration
+- Embedded **FullCalendar.js** into the teacher dashboard to dynamically load confirmed and completed bookings as events, color-coded by job status.
+
+### 4. Verified with Feature Tests
+- Authored [TeacherPortalTest.php](file:///c:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/tests/Feature/TeacherPortalTest.php) to assert dashboard access authorization, preference submission, matching rules, and booking constraints.
+- All 41 tests passed successfully:
+```bash
+Tests:    41 passed (144 assertions)
+Duration: 6.14s
+```

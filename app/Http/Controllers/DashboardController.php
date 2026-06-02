@@ -138,4 +138,122 @@ class DashboardController extends Controller
 
         return redirect()->route('district.dashboard')->with('error', 'Teacher onboarding was rejected.');
     }
+
+    /**
+     * Display the Teacher Dashboard.
+     */
+    public function teacherDashboard(): View
+    {
+        $teacherUser = auth()->user();
+        $teacherProfile = $teacherUser->teacherProfile;
+
+        if (!$teacherProfile) {
+            $teacherProfile = TeacherProfile::create([
+                'user_id' => $teacherUser->id,
+                'hourly_rate' => 30.00,
+                'classroom_preferences' => [
+                    'grades' => [],
+                    'subjects' => [],
+                    'preferred_schools' => [],
+                ],
+                'onboarding_status' => 'pending',
+            ]);
+        }
+
+        $schools = SchoolProfile::all();
+        $bookings = Booking::where('teacher_profile_id', $teacherProfile->id)
+            ->with(['substituteJob.schoolProfile'])
+            ->get();
+
+        $matchingJobs = [];
+        if ($teacherProfile->onboarding_status === 'approved') {
+            $allOpenJobs = SubstituteJob::where('status', 'open')
+                ->where('date', '>=', Carbon::now()->toDateString())
+                ->with('schoolProfile')
+                ->get();
+
+            $prefs = $teacherProfile->classroom_preferences ?? [];
+            $prefGrades = $prefs['grades'] ?? [];
+            $prefSubjects = $prefs['subjects'] ?? [];
+            $prefSchools = $prefs['preferred_schools'] ?? [];
+
+            foreach ($allOpenJobs as $job) {
+                // If preference arrays are empty, treat as matching all (no filter)
+                $gradeMatches = empty($prefGrades) || in_array($job->grade_level, $prefGrades);
+                $subjectMatches = empty($prefSubjects) || in_array($job->subject, $prefSubjects);
+                $schoolMatches = empty($prefSchools) || in_array($job->school_profile_id, $prefSchools);
+
+                if ($gradeMatches && $subjectMatches && $schoolMatches) {
+                    $matchingJobs[] = $job;
+                }
+            }
+        }
+
+        return view('teacher.dashboard', compact(
+            'teacherProfile',
+            'schools',
+            'bookings',
+            'matchingJobs'
+        ));
+    }
+
+    /**
+     * Update teacher classroom preferences.
+     */
+    public function updatePreferences(Request $request): RedirectResponse
+    {
+        $teacherProfile = auth()->user()->teacherProfile;
+        if (!$teacherProfile) {
+            return redirect()->route('teacher.dashboard')->with('error', 'Profile not found.');
+        }
+
+        $request->validate([
+            'grades' => 'nullable|array',
+            'grades.*' => 'string',
+            'subjects' => 'nullable|array',
+            'subjects.*' => 'string',
+            'preferred_schools' => 'nullable|array',
+            'preferred_schools.*' => 'integer|exists:school_profiles,id',
+            'hourly_rate' => 'required|numeric|min:0',
+        ]);
+
+        $teacherProfile->update([
+            'hourly_rate' => $request->hourly_rate,
+            'classroom_preferences' => [
+                'grades' => $request->grades ?? [],
+                'subjects' => $request->subjects ?? [],
+                'preferred_schools' => array_map('intval', $request->preferred_schools ?? []),
+            ]
+        ]);
+
+        return redirect()->route('teacher.dashboard')->with('success', 'Preferences updated successfully!');
+    }
+
+    /**
+     * Book a substitute job.
+     */
+    public function bookJob(int $id): RedirectResponse
+    {
+        $teacherProfile = auth()->user()->teacherProfile;
+        if (!$teacherProfile || $teacherProfile->onboarding_status !== 'approved') {
+            return redirect()->route('teacher.dashboard')->with('error', 'You must be approved to book jobs.');
+        }
+
+        $job = SubstituteJob::findOrFail($id);
+        if ($job->status !== 'open') {
+            return redirect()->route('teacher.dashboard')->with('error', 'This job is no longer available.');
+        }
+
+        // Create Booking
+        Booking::create([
+            'substitute_job_id' => $job->id,
+            'teacher_profile_id' => $teacherProfile->id,
+            'status' => 'confirmed',
+        ]);
+
+        // Update job status
+        $job->update(['status' => 'filled']);
+
+        return redirect()->route('teacher.dashboard')->with('success', 'Job booked successfully! It has been added to your schedule.');
+    }
 }
