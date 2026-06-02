@@ -14,6 +14,7 @@ use App\Models\LessonPlan;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -22,6 +23,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // 0. Seed Roles
+        $districtAdminRole = Role::create(['name' => 'district_admin']);
+        $schoolAdminRole = Role::create(['name' => 'school_admin']);
+        $teacherRole = Role::create(['name' => 'teacher']);
+
         // 1. Seed Districts
         $springfieldDistrict = District::create([
             'name' => 'Springfield School District 401',
@@ -51,7 +57,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'chalmers@springfield.edu',
             'password' => Hash::make('password'),
         ]);
-        // Note: Spatie Roles will be assigned in Phase 2, but we can set up profiles now.
+        $districtAdminUser->assignRole('district_admin');
 
         // School Admin 1 & Springfield Elementary School
         $springfieldAdminUser = User::create([
@@ -59,6 +65,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'skinner@springfield.edu',
             'password' => Hash::make('password'),
         ]);
+        $springfieldAdminUser->assignRole('school_admin');
         $springfieldSchool = SchoolProfile::create([
             'user_id' => $springfieldAdminUser->id,
             'district_id' => $springfieldDistrict->id,
@@ -72,6 +79,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'miller@shelbyville.edu',
             'password' => Hash::make('password'),
         ]);
+        $shelbyvilleAdminUser->assignRole('school_admin');
         $shelbyvilleSchool = SchoolProfile::create([
             'user_id' => $shelbyvilleAdminUser->id,
             'district_id' => $shelbyvilleDistrict->id,
@@ -85,6 +93,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'bob@example.com',
             'password' => Hash::make('password'),
         ]);
+        $teacherBobUser->assignRole('teacher');
         $teacherBobProfile = TeacherProfile::create([
             'user_id' => $teacherBobUser->id,
             'district_id' => $springfieldDistrict->id,
@@ -135,6 +144,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'krusty@example.com',
             'password' => Hash::make('password'),
         ]);
+        $teacherKrustyUser->assignRole('teacher');
         $teacherKrustyProfile = TeacherProfile::create([
             'user_id' => $teacherKrustyUser->id,
             'district_id' => $springfieldDistrict->id,
@@ -179,6 +189,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'lisa@example.com',
             'password' => Hash::make('password'),
         ]);
+        $teacherLisaUser->assignRole('teacher');
         $teacherLisaProfile = TeacherProfile::create([
             'user_id' => $teacherLisaUser->id,
             'district_id' => $springfieldDistrict->id,
@@ -229,6 +240,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'ned@example.com',
             'password' => Hash::make('password'),
         ]);
+        $teacherNedUser->assignRole('teacher');
         $teacherNedProfile = TeacherProfile::create([
             'user_id' => $teacherNedUser->id,
             'district_id' => $shelbyvilleDistrict->id,

@@ -30,11 +30,11 @@ Here is the phase-by-phase development plan. We will execute one phase at a time
 - `[x]` Create database factories and seeders for all models to enable testing.
 
 ### Phase 2: Authentication (Laravel Breeze) & RBAC (Spatie)
-- `[ ]` Install **Laravel Breeze** and run its installation command (Blade stack).
-- `[ ]` Install **Spatie Laravel Permission** package and run its migrations.
-- `[ ]` Create Roles (`district_admin`, `school_admin`, `teacher`) and assign permissions in database seeders.
-- `[ ]` Modify Breeze Registration flow to allow users to select their role (`teacher` or `school_admin`) and automatically assign the corresponding Spatie role on registration.
-- `[ ]` Setup Role-based redirect middleware to route logged-in users to their respective dashboards.
+- `[x]` Install **Laravel Breeze** and run its installation command (Blade stack).
+- `[x]` Install **Spatie Laravel Permission** package and run its migrations.
+- `[x]` Create Roles (`district_admin`, `school_admin`, `teacher`) and assign permissions in database seeders.
+- `[x]` Modify Breeze Registration flow to allow users to select their role (`teacher` or `school_admin`) and automatically assign the corresponding Spatie role on registration.
+- `[x]` Setup Role-based redirect middleware to route logged-in users to their respective dashboards.
 
 ### Phase 3: AdminLTE Integration & Theme Switcher (Portals)
 - `[ ]` Copy static files/assets (CSS, JS, plugins) from `C:\Reza\Tauhid\Templates\AdminLTE-3.1.0` to `public/vendor/adminlte`.
