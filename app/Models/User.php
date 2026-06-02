@@ -46,4 +46,20 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get the school profile associated with the user.
+     */
+    public function schoolProfile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(SchoolProfile::class);
+    }
+
+    /**
+     * Get the teacher profile associated with the user.
+     */
+    public function teacherProfile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(TeacherProfile::class);
+    }
 }

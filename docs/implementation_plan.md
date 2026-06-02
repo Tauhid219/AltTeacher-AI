@@ -22,12 +22,12 @@ Here is the phase-by-phase development plan. We will execute one phase at a time
 ### Phase 0: Project Setup & Repository Connection
 - `[x]` Initialize Git repository inside project folder.
 - `[x]` Connect local repository to the remote origin: `https://github.com/Tauhid219/AltTeacher-AI.git`.
-- `[ ]` Initial commit and push of existing files.
+- `[x]` Initial commit and push of existing files.
 
 ### Phase 1: Database Architecture & Core Models
-- `[ ]` Create migrations for `districts`, `teacher_profiles`, `school_profiles`, `credentials`, `jobs`, `bookings`, `timesheets`, and `lesson_plans`.
-- `[ ]` Create Laravel Models with relations, accessors, and JSON casts.
-- `[ ]` Create database factories and seeders for all models to enable testing.
+- `[x]` Create migrations for `districts`, `teacher_profiles`, `school_profiles`, `credentials`, `jobs`, `bookings`, `timesheets`, and `lesson_plans`.
+- `[x]` Create Laravel Models with relations, accessors, and JSON casts.
+- `[x]` Create database factories and seeders for all models to enable testing.
 
 ### Phase 2: Authentication (Laravel Breeze) & RBAC (Spatie)
 - `[ ]` Install **Laravel Breeze** and run its installation command (Blade stack).
