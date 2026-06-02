@@ -162,7 +162,7 @@
                                     <th>Subject & Grade</th>
                                     <th>School</th>
                                     <th>Date & Time</th>
-                                    <th class="text-right">Classroom Prep</th>
+                                    <th class="text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -181,6 +181,7 @@
                                             <small class="text-muted">{{ \Carbon\Carbon::parse($booking->substituteJob->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($booking->substituteJob->end_time)->format('h:i A') }}</small>
                                         </td>
                                         <td class="text-right align-middle">
+                                            <!-- Classroom Prep Packet Button -->
                                             @if($booking->lessonPlan)
                                                 <button class="btn btn-info btn-xs font-weight-bold view-prep-btn" 
                                                         data-toggle="modal" 
@@ -195,7 +196,34 @@
                                                     <i class="fas fa-magic mr-1"></i> View Prep Packet
                                                 </button>
                                             @else
-                                                <span class="text-muted text-xs font-italic">No Packet Available</span>
+                                                <span class="badge badge-secondary text-xs mr-1">No Packet</span>
+                                            @endif
+
+                                            <!-- Digital Clock In / Clock Out / Timesheet Status -->
+                                            @if(!$booking->timesheet)
+                                                <form action="{{ route('teacher.booking.clock_in', $booking->id) }}" method="POST" class="d-inline ml-1">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-success btn-xs font-weight-bold">
+                                                        <i class="fas fa-sign-in-alt mr-1"></i> Clock In
+                                                    </button>
+                                                </form>
+                                            @elseif(!$booking->timesheet->check_out_time)
+                                                <form action="{{ route('teacher.booking.clock_out', $booking->id) }}" method="POST" class="d-inline ml-1">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-danger btn-xs font-weight-bold">
+                                                        <i class="fas fa-sign-out-alt mr-1"></i> Clock Out
+                                                    </button>
+                                                </form>
+                                            @else
+                                                @if($booking->timesheet->status === 'pending')
+                                                    <span class="badge badge-warning ml-1 font-weight-bold"><i class="fas fa-clock mr-1"></i> Pending Approval</span>
+                                                @elseif($booking->timesheet->status === 'approved')
+                                                    <span class="badge badge-success ml-1 font-weight-bold" title="Earned: ${{ number_format($booking->timesheet->calculated_pay, 2) }}">
+                                                        <i class="fas fa-check-circle mr-1"></i> Approved (${{ $booking->timesheet->calculated_hours }} hrs)
+                                                    </span>
+                                                @else
+                                                    <span class="badge badge-danger ml-1 font-weight-bold"><i class="fas fa-ban mr-1"></i> Rejected</span>
+                                                @endif
                                             @endif
                                         </td>
                                     </tr>

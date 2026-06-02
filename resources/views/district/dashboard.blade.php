@@ -158,4 +158,122 @@
             </div>
         </div>
     </div>
+
+    <!-- Analytics / Charts Section -->
+    <div class="row mt-4">
+        <!-- School Expenditures Bar Chart -->
+        <div class="col-md-6">
+            <div class="card card-outline card-success">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-bar mr-1 text-success"></i>
+                        Approved School Expenditures
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px; position: relative;">
+                        <canvas id="schoolSpendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timesheet Status Doughnut Chart -->
+        <div class="col-md-6">
+            <div class="card card-outline card-info">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-pie mr-1 text-info"></i>
+                        Timesheet Processing Summary
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px; position: relative;">
+                        <canvas id="timesheetStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('scripts')
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 1. School Spend Bar Chart
+            const schoolSpendData = @json($schoolSpending);
+            const schoolLabels = Object.keys(schoolSpendData);
+            const schoolValues = Object.values(schoolSpendData);
+
+            const ctx1 = document.getElementById('schoolSpendChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: schoolLabels.length > 0 ? schoolLabels : ['No Data'],
+                    datasets: [{
+                        label: 'Total Approved Spend ($)',
+                        data: schoolValues.length > 0 ? schoolValues : [0],
+                        backgroundColor: '#28a745',
+                        borderColor: '#1e7e34',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // 2. Timesheet Status Doughnut Chart
+            const statusData = @json($statusBreakdown);
+            const statusLabels = Object.keys(statusData).map(s => s.charAt(0).toUpperCase() + s.slice(1));
+            const statusValues = Object.values(statusData);
+
+            // Default color scheme matching status badges
+            const colorMapping = {
+                'Approved': '#28a745',
+                'Pending': '#ffc107',
+                'Rejected': '#dc3545'
+            };
+            const bgColors = Object.keys(statusData).map(s => colorMapping[s.charAt(0).toUpperCase() + s.slice(1)] || '#6c757d');
+
+            const ctx2 = document.getElementById('timesheetStatusChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels.length > 0 ? statusLabels : ['No Timesheets'],
+                    datasets: [{
+                        data: statusValues.length > 0 ? statusValues : [1],
+                        backgroundColor: statusValues.length > 0 ? bgColors : ['#e9ecef'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 @endsection

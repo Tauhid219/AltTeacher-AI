@@ -193,3 +193,33 @@ Tests:    49 passed (198 assertions)
 Duration: 10.37s
 ```
 
+---
+
+## Phase 7: Payroll Tracking & Timesheets
+We implemented digital time-clock tracking, automated payroll calculations, timesheet verification workflows, and visual payroll reporting:
+
+### 1. Digital Time-Clock for Teachers
+- Added interactive **Clock In** and **Clock Out** buttons in the bookings table on the Teacher Dashboard.
+- **Clock In**: Records the teacher's check-in timestamp (`timesheets.check_in_time`) and initializes a timesheet record.
+- **Clock Out**: Records check-out timestamp, computes decimal hours (check-out time minus check-in time, rounded), calculates total pay (decimal hours * teacher's `hourly_rate`), updates booking and job statuses to `completed`.
+
+### 2. Timesheet Approval Workflow
+- Created a **Timesheet Approvals & Billing** table card on the School Admin Dashboard.
+- Lists all timesheets submitted for jobs at that school (displaying teacher name, hours, rate, pay, and timestamps).
+- Enables School Admins to review and **Approve** or **Reject** pending timesheets.
+
+### 3. District Analytics & Chart.js Reports
+- Integrated **Chart.js** library into the District Admin Dashboard.
+- Added two visual reports:
+  1. **School Expenditure Bar Chart**: Displays total approved spending dynamically computed for each school profile.
+  2. **Timesheet Status Breakdown Doughnut Chart**: Shows count breakdown by status (`approved`, `pending`, `rejected`).
+
+### 4. Verified with Feature Tests
+- Authored [TimesheetPayrollTest.php](file:///c:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/tests/Feature/TimesheetPayrollTest.php) to assert clock-in records, hour & pay calculations, job completion triggers, and admin approvals/rejections with role restrictions.
+- Executed all 54 tests and confirmed all passed successfully:
+```bash
+Tests:    54 passed (229 assertions)
+Duration: 17.84s
+```
+
+

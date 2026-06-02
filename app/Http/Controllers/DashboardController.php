@@ -57,13 +57,21 @@ class DashboardController extends Controller
             ->orderBy('date', 'desc')
             ->get();
 
+        // Load timesheets for this school's postings
+        $timesheets = Timesheet::whereHas('booking.substituteJob', function ($query) use ($schoolProfile) {
+            $query->where('school_profile_id', $schoolProfile->id);
+        })->with(['booking.teacherProfile.user', 'booking.substituteJob'])
+          ->orderBy('created_at', 'desc')
+          ->get();
+
         return view('school.dashboard', compact(
             'schoolProfile',
             'openJobsCount',
             'filledJobsCount',
             'approvedTeachersCount',
             'monthSpend',
-            'jobs'
+            'jobs',
+            'timesheets'
         ));
     }
 
@@ -81,12 +89,30 @@ class DashboardController extends Controller
             ->orderBy('onboarding_status', 'desc')
             ->get();
 
+        // School-wise spending for bar chart
+        $schoolSpending = Timesheet::where('timesheets.status', 'approved')
+            ->join('bookings', 'timesheets.booking_id', '=', 'bookings.id')
+            ->join('substitute_jobs', 'bookings.substitute_job_id', '=', 'substitute_jobs.id')
+            ->join('school_profiles', 'substitute_jobs.school_profile_id', '=', 'school_profiles.id')
+            ->selectRaw('school_profiles.school_name, SUM(timesheets.calculated_pay) as total_spend')
+            ->groupBy('school_profiles.school_name')
+            ->pluck('total_spend', 'school_name')
+            ->toArray();
+
+        // Timesheet status breakdown for doughnut chart
+        $statusBreakdown = Timesheet::selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
         return view('district.dashboard', compact(
             'totalTeachersCount',
             'pendingTeachersCount',
             'activeBookingsCount',
             'totalPayroll',
-            'teachers'
+            'teachers',
+            'schoolSpending',
+            'statusBreakdown'
         ));
     }
 
@@ -172,7 +198,7 @@ class DashboardController extends Controller
 
         $schools = SchoolProfile::all();
         $bookings = Booking::where('teacher_profile_id', $teacherProfile->id)
-            ->with(['substituteJob.schoolProfile'])
+            ->with(['substituteJob.schoolProfile', 'timesheet'])
             ->get();
 
         $matchingJobs = [];
@@ -393,5 +419,117 @@ class DashboardController extends Controller
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.lesson_plan', compact('booking', 'lessonPlan'));
         return $pdf->download("lesson_plan_booking_{$booking->id}.pdf");
+    }
+
+    /**
+     * Clock in the teacher for their booked substitute job.
+     */
+    public function clockIn(Request $request, int $bookingId): RedirectResponse
+    {
+        $teacherProfile = auth()->user()->teacherProfile;
+        if (!$teacherProfile) {
+            return redirect()->route('teacher.dashboard')->with('error', 'Profile not found.');
+        }
+
+        $booking = Booking::where('teacher_profile_id', $teacherProfile->id)->findOrFail($bookingId);
+
+        if ($booking->timesheet) {
+            return redirect()->route('teacher.dashboard')->with('error', 'You have already clocked in for this job.');
+        }
+
+        $checkInTime = $request->check_in_time ? Carbon::parse($request->check_in_time) : Carbon::now();
+
+        Timesheet::create([
+            'booking_id' => $booking->id,
+            'check_in_time' => $checkInTime,
+            'status' => 'pending',
+        ]);
+
+        return redirect()->route('teacher.dashboard')->with('success', 'Clock-in recorded successfully!');
+    }
+
+    /**
+     * Clock out the teacher for their booked substitute job.
+     */
+    public function clockOut(Request $request, int $bookingId): RedirectResponse
+    {
+        $teacherProfile = auth()->user()->teacherProfile;
+        if (!$teacherProfile) {
+            return redirect()->route('teacher.dashboard')->with('error', 'Profile not found.');
+        }
+
+        $booking = Booking::where('teacher_profile_id', $teacherProfile->id)
+            ->with(['substituteJob'])
+            ->findOrFail($bookingId);
+
+        $timesheet = $booking->timesheet;
+        if (!$timesheet || !$timesheet->check_in_time) {
+            return redirect()->route('teacher.dashboard')->with('error', 'You must clock in first.');
+        }
+
+        if ($timesheet->check_out_time) {
+            return redirect()->route('teacher.dashboard')->with('error', 'You have already clocked out.');
+        }
+
+        $checkOutTime = $request->check_out_time ? Carbon::parse($request->check_out_time) : Carbon::now();
+        $checkInTime = $timesheet->check_in_time;
+
+        $secondsDiff = $checkOutTime->diffInSeconds($checkInTime, false);
+        $calculatedHours = abs(round($secondsDiff / 3600, 2));
+        
+        $hourlyRate = $teacherProfile->hourly_rate ?: 30.00;
+        $calculatedPay = round($calculatedHours * $hourlyRate, 2);
+
+        $timesheet->update([
+            'check_out_time' => $checkOutTime,
+            'calculated_hours' => $calculatedHours,
+            'calculated_pay' => $calculatedPay,
+            'status' => 'pending',
+        ]);
+
+        $booking->update(['status' => 'completed']);
+        if ($booking->substituteJob) {
+            $booking->substituteJob->update(['status' => 'completed']);
+        }
+
+        return redirect()->route('teacher.dashboard')->with('success', 'Clock-out recorded successfully! Timesheet submitted for school approval.');
+    }
+
+    /**
+     * Approve timesheet from school dashboard.
+     */
+    public function approveTimesheet(int $timesheetId): RedirectResponse
+    {
+        $schoolProfile = auth()->user()->schoolProfile;
+        if (!$schoolProfile) {
+            return redirect()->route('school.dashboard')->with('error', 'School profile not found.');
+        }
+
+        $timesheet = Timesheet::whereHas('booking.substituteJob', function ($query) use ($schoolProfile) {
+            $query->where('school_profile_id', $schoolProfile->id);
+        })->findOrFail($timesheetId);
+
+        $timesheet->update(['status' => 'approved']);
+
+        return redirect()->route('school.dashboard')->with('success', 'Timesheet approved successfully!');
+    }
+
+    /**
+     * Reject timesheet from school dashboard.
+     */
+    public function rejectTimesheet(int $timesheetId): RedirectResponse
+    {
+        $schoolProfile = auth()->user()->schoolProfile;
+        if (!$schoolProfile) {
+            return redirect()->route('school.dashboard')->with('error', 'School profile not found.');
+        }
+
+        $timesheet = Timesheet::whereHas('booking.substituteJob', function ($query) use ($schoolProfile) {
+            $query->where('school_profile_id', $schoolProfile->id);
+        })->findOrFail($timesheetId);
+
+        $timesheet->update(['status' => 'rejected']);
+
+        return redirect()->route('school.dashboard')->with('error', 'Timesheet was rejected.');
     }
 }

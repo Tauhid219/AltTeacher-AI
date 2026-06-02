@@ -195,6 +195,102 @@
             </div>
         </div>
     </div>
+
+    <!-- Timesheet Approvals Row -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card card-outline card-warning">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-file-invoice-dollar mr-1 text-warning"></i> Timesheet Approvals & Billing</h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-valign-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Teacher Name</th>
+                                    <th>Subject & Grade</th>
+                                    <th>Hours</th>
+                                    <th>Calculated Pay</th>
+                                    <th>Check In & Out</th>
+                                    <th>Status</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($timesheets as $ts)
+                                    <tr>
+                                        <td>
+                                            <div class="font-weight-bold">{{ $ts->booking->teacherProfile->user->name }}</div>
+                                            <small class="text-muted">{{ $ts->booking->teacherProfile->user->email }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-info mb-1">{{ $ts->booking->substituteJob->grade_level }}</span>
+                                            <h6 class="mb-0 text-bold text-primary">{{ $ts->booking->substituteJob->subject }}</h6>
+                                        </td>
+                                        <td>
+                                            @if($ts->calculated_hours)
+                                                {{ $ts->calculated_hours }} hrs
+                                            @else
+                                                <span class="text-muted font-italic">Active / Not Checked Out</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($ts->calculated_pay)
+                                                <strong>${{ number_format($ts->calculated_pay, 2) }}</strong>
+                                                <small class="text-muted d-block">(${{ number_format($ts->booking->teacherProfile->hourly_rate, 2) }}/hr)</small>
+                                            @else
+                                                &mdash;
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div><small><strong>In:</strong> {{ $ts->check_in_time ? $ts->check_in_time->format('M d, Y h:i A') : 'N/A' }}</small></div>
+                                            <div><small><strong>Out:</strong> {{ $ts->check_out_time ? $ts->check_out_time->format('M d, Y h:i A') : 'N/A' }}</small></div>
+                                        </td>
+                                        <td>
+                                            @if($ts->status === 'approved')
+                                                <span class="badge badge-success">Approved</span>
+                                            @elseif($ts->status === 'rejected')
+                                                <span class="badge badge-danger">Rejected</span>
+                                            @else
+                                                <span class="badge badge-warning">Pending Review</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-right align-middle">
+                                            @if($ts->status === 'pending' && $ts->check_out_time)
+                                                <div class="btn-group btn-group-sm">
+                                                    <form action="{{ route('school.timesheets.approve', $ts->id) }}" method="POST" class="d-inline mr-1">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-success btn-xs font-weight-bold">
+                                                            <i class="fas fa-check mr-1"></i> Approve
+                                                        </button>
+                                                    </form>
+                                                    <form action="{{ route('school.timesheets.reject', $ts->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-danger btn-xs font-weight-bold">
+                                                            <i class="fas fa-times mr-1"></i> Reject
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @elseif(!$ts->check_out_time)
+                                                <span class="text-xs text-muted font-italic">In Progress...</span>
+                                            @else
+                                                <span class="text-xs text-muted"><i class="fas fa-lock mr-1"></i> Locked</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center p-4 text-muted">No timesheets submitted for your school's jobs yet.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')

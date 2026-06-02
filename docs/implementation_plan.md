@@ -62,9 +62,20 @@ Here is the phase-by-phase development plan. We will execute one phase at a time
 - `[x]` Add PDF export feature for the AI-generated classroom prep files.
 
 ### Phase 7: Payroll Tracking & Timesheets
-- `[ ]` Implement digital check-in and check-out system for teachers on their booking pages.
-- `[ ]` Implement pay rate calculations and Timesheet approval workflows.
-- `[ ]` Create timesheets and billing invoices summary charts in the District Admin dashboard.
+- `[x]` Implement digital check-in and check-out system for teachers on their booking pages.
+  - **Routes**:
+    - `POST /teacher/booking/{id}/clock-in` -> `teacher.booking.clock_in`
+    - `POST /teacher/booking/{id}/clock-out` -> `teacher.booking.clock_out`
+  - **Check-in**: Records current time to `timesheets.check_in_time` and sets status to `pending`.
+  - **Check-out**: Records current time to `timesheets.check_out_time`. Calculates decimal hours (seconds difference / 3600), multiplies by `teacher_profiles.hourly_rate` to set `calculated_pay`, and updates `substitute_jobs.status` to `completed`.
+- `[x]` Implement pay rate calculations and Timesheet approval workflows.
+  - **Routes**:
+    - `POST /school/timesheet/{id}/approve` -> `school.timesheets.approve`
+    - `POST /school/timesheet/{id}/reject` -> `school.timesheets.reject`
+  - **School Dashboard**: Add a "Timesheet Approvals & Billing" card listing pending/approved/rejected timesheets with quick actions.
+- `[x]` Create timesheets and billing invoices summary charts in the District Admin dashboard.
+  - **Analytics**: Aggregates total approved pay per school and count by timesheet status.
+  - **Visualizations**: Renders a Bar Chart (spending per school) and a Doughnut Chart (timesheet status) in `district/dashboard` using Chart.js.
 
 ### Phase 8: Final Review, Testing & Git Push
 - `[ ]` Run Laravel Pint formatting check.

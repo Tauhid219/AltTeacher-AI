@@ -29,6 +29,8 @@ Route::middleware(['auth', 'role:district_admin'])->prefix('district')->name('di
 Route::middleware(['auth', 'role:school_admin'])->prefix('school')->name('school.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'schoolDashboard'])->name('dashboard');
     Route::post('/jobs', [DashboardController::class, 'storeJob'])->name('jobs.store');
+    Route::post('/timesheet/{id}/approve', [DashboardController::class, 'approveTimesheet'])->name('timesheets.approve');
+    Route::post('/timesheet/{id}/reject', [DashboardController::class, 'rejectTimesheet'])->name('timesheets.reject');
 });
 
 Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
@@ -37,6 +39,8 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     Route::post('/book/{id}', [DashboardController::class, 'bookJob'])->name('book');
     Route::post('/credentials', [DashboardController::class, 'storeCredential'])->name('credentials.store');
     Route::get('/booking/{id}/pdf', [DashboardController::class, 'downloadLessonPlanPdf'])->name('lesson_plan.pdf');
+    Route::post('/booking/{id}/clock-in', [DashboardController::class, 'clockIn'])->name('booking.clock_in');
+    Route::post('/booking/{id}/clock-out', [DashboardController::class, 'clockOut'])->name('booking.clock_out');
 });
 
 Route::middleware('auth')->group(function () {
