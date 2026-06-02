@@ -133,3 +133,28 @@ We built a comprehensive workspace for substitute teachers, matching available j
 Tests:    41 passed (144 assertions)
 Duration: 6.14s
 ```
+
+---
+
+## Phase 5: AI-Assisted Document Verification & Onboarding
+We implemented automated credential scanning and verification using the Gemini API:
+
+### 1. Gemini Client Integration (Wrapper)
+- Created [GeminiService.php](file:///c:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/app/Services/GeminiService.php) to call Gemini's `gemini-1.5-flash` model. It reads uploaded documents, converts them to base64, and extracts credential details (full name, license/case number, and expiry date) as a structured JSON object.
+- Integrated a high-fidelity local Mock AI fallback. It processes normal files and detects files containing `'expired'` in their original filename, returning expired mock dates for compliance test cases.
+
+### 2. Document Upload & Parsing
+- Added a document upload card to the Teacher Dashboard [teacher/dashboard.blade.php](file:///c:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/resources/views/teacher/dashboard.blade.php) where teachers can submit State Teaching Licenses, Background Checks, or Government IDs.
+- Added a verification history list that displays the AI-extracted information (holder's name, license number, and expiry dates) as well as the verification status badge (`verified`, `pending`, or `rejected`).
+
+### 3. Compliance Rules & Booking Validation
+- Configured automated compliance checks. When booking a job, the system queries the school district's compliance rules (e.g. required licenses) and verifies that the teacher has verified, non-expired credentials of those types.
+- Non-compliant teachers are blocked from booking jobs and redirected with a warning message.
+
+### 4. Verified with Feature Tests
+- Authored [CredentialVerificationTest.php](file:///c:/xampp/htdocs/My%20Works/Infinity%20AI%20Buildfest%202026/AltTeacher-AI/tests/Feature/CredentialVerificationTest.php) to verify guest upload blocking, mock verification logic, expired credential flagging, compliance engine booking blocks, and compliant booking approvals.
+- All 46 tests passed successfully:
+```bash
+Tests:    46 passed (170 assertions)
+Duration: 5.35s
+```

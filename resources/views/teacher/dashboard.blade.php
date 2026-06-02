@@ -244,6 +244,80 @@
                     </form>
                 </div>
             </div>
+
+            <!-- Upload Credentials Card -->
+            <div class="card card-outline card-warning mt-3">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-id-card mr-1 text-warning"></i>
+                        AI Verification Documents
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Upload Form -->
+                    <form action="{{ route('teacher.credentials.store') }}" method="POST" enctype="multipart/form-data" class="mb-4">
+                        @csrf
+                        <div class="form-group">
+                            <label for="document_type">Document Type</label>
+                            <select name="document_type" id="document_type" class="form-control" required>
+                                <option value="state_teaching_license">State Teaching License</option>
+                                <option value="background_check">Background Check</option>
+                                <option value="government_id">Government ID Card</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="document">Upload File (PDF, PNG, JPG)</label>
+                            <div class="custom-file">
+                                <input type="file" name="document" class="custom-file-input" id="document" required>
+                                <label class="custom-file-label" for="document">Choose file</label>
+                            </div>
+                            <small class="form-text text-muted">Maximum file size: 5MB.</small>
+                        </div>
+                        <button type="submit" class="btn btn-warning btn-block font-weight-bold">
+                            <i class="fas fa-upload mr-1"></i> Upload for AI Verification
+                        </button>
+                    </form>
+
+                    <!-- Existing Credentials List -->
+                    <label class="d-block border-top pt-3">Verification History</label>
+                    <ul class="list-unstyled mb-0">
+                        @forelse($teacherProfile->credentials as $cred)
+                            <li class="p-2 border rounded mb-2">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="font-weight-bold text-sm">
+                                        {{ str_replace('_', ' ', ucfirst($cred->document_type)) }}
+                                    </span>
+                                    @if($cred->verification_status === 'verified')
+                                        <span class="badge badge-success">Verified</span>
+                                    @elseif($cred->verification_status === 'rejected')
+                                        <span class="badge badge-danger">Rejected/Expired</span>
+                                    @else
+                                        <span class="badge badge-warning">Pending</span>
+                                    @endif
+                                </div>
+                                <div class="text-xs text-muted">
+                                    @if($cred->expiry_date)
+                                        <span>Expires: {{ \Carbon\Carbon::parse($cred->expiry_date)->format('M d, Y') }}</span>
+                                    @else
+                                        <span class="font-italic">No expiration date parsed</span>
+                                    @endif
+                                </div>
+                                @if($cred->extracted_info)
+                                    <div class="bg-light p-1 mt-1 rounded text-xs text-secondary border">
+                                        <strong>AI Extracted Name:</strong> {{ $cred->extracted_info['name'] ?? 'N/A' }}<br>
+                                        <strong>License #:</strong> {{ $cred->extracted_info['license_number'] ?? $cred->extracted_info['case_number'] ?? 'N/A' }}
+                                    </div>
+                                @endif
+                            </li>
+                        @empty
+                            <li class="text-center p-3 text-muted border rounded bg-light">
+                                <i class="fas fa-cloud-upload-alt fa-2x mb-1 text-secondary"></i>
+                                <p class="mb-0 text-xs font-italic">No documents uploaded yet.</p>
+                            </li>
+                        @endforelse
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -263,14 +337,14 @@
                     right: 'dayGridMonth,timeGridWeek'
                 },
                 events: [
-                    @foreach($bookings as $booking)
-                    @if($booking->substituteJob)
+                    @foreach($bookings as $bookingsItem)
+                    @if($bookingsItem->substituteJob)
                     {
-                        title: "{{ $booking->substituteJob->subject }} ({{ $booking->substituteJob->grade_level }}) - {{ $booking->substituteJob->schoolProfile->school_name }}",
-                        start: "{{ $booking->substituteJob->date->toDateString() }}T{{ $booking->substituteJob->start_time }}",
-                        end: "{{ $booking->substituteJob->date->toDateString() }}T{{ $booking->substituteJob->end_time }}",
-                        backgroundColor: "{{ $booking->status === 'completed' ? '#6c757d' : '#28a745' }}",
-                        borderColor: "{{ $booking->status === 'completed' ? '#6c757d' : '#28a745' }}",
+                        title: "{{ $bookingsItem->substituteJob->subject }} ({{ $bookingsItem->substituteJob->grade_level }}) - {{ $bookingsItem->substituteJob->schoolProfile->school_name }}",
+                        start: "{{ $bookingsItem->substituteJob->date->toDateString() }}T{{ $bookingsItem->substituteJob->start_time }}",
+                        end: "{{ $bookingsItem->substituteJob->date->toDateString() }}T{{ $bookingsItem->substituteJob->end_time }}",
+                        backgroundColor: "{{ $bookingsItem->status === 'completed' ? '#6c757d' : '#28a745' }}",
+                        borderColor: "{{ $bookingsItem->status === 'completed' ? '#6c757d' : '#28a745' }}",
                         allDay: false
                     },
                     @endif
@@ -278,6 +352,12 @@
                 ]
             });
             calendar.render();
+
+            // Bootstrap custom file input dynamic filename display update
+            $('.custom-file-input').on('change', function() {
+                let fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
         });
     </script>
 @endsection

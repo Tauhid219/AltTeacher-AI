@@ -8,6 +8,8 @@ use App\Models\SchoolProfile;
 use App\Models\SubstituteJob;
 use App\Models\Booking;
 use App\Models\Timesheet;
+use App\Models\Credential;
+use App\Services\GeminiService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -239,6 +241,29 @@ class DashboardController extends Controller
             return redirect()->route('teacher.dashboard')->with('error', 'You must be approved to book jobs.');
         }
 
+        // Compliance checks
+        $district = $teacherProfile->district;
+        if ($district) {
+            $rules = $district->compliance_rules ?? [];
+            $requiredDocs = $rules['required_credentials'] ?? [];
+
+            foreach ($requiredDocs as $docType) {
+                // Find if there is a verified, non-expired credential of this type
+                $credential = $teacherProfile->credentials()
+                    ->where('document_type', $docType)
+                    ->where('verification_status', 'verified')
+                    ->where(function ($query) {
+                        $query->whereNull('expiry_date')
+                              ->orWhere('expiry_date', '>=', Carbon::now()->toDateString());
+                    })
+                    ->first();
+
+                if (!$credential) {
+                    return redirect()->route('teacher.dashboard')->with('error', 'Booking blocked: You are non-compliant. Please ensure you have uploaded a valid, non-expired ' . str_replace('_', ' ', $docType) . '.');
+                }
+            }
+        }
+
         $job = SubstituteJob::findOrFail($id);
         if ($job->status !== 'open') {
             return redirect()->route('teacher.dashboard')->with('error', 'This job is no longer available.');
@@ -255,5 +280,66 @@ class DashboardController extends Controller
         $job->update(['status' => 'filled']);
 
         return redirect()->route('teacher.dashboard')->with('success', 'Job booked successfully! It has been added to your schedule.');
+    }
+
+    /**
+     * Store and verify uploaded credentials.
+     */
+    public function storeCredential(Request $request): RedirectResponse
+    {
+        $teacherProfile = auth()->user()->teacherProfile;
+        if (!$teacherProfile) {
+            return redirect()->route('teacher.dashboard')->with('error', 'Profile not found.');
+        }
+
+        $request->validate([
+            'document_type' => 'required|string|in:state_teaching_license,background_check,government_id',
+            'document' => 'required|file|max:5000|mimes:pdf,jpeg,png,jpg',
+        ]);
+
+        // Store file
+        $path = $request->file('document')->store('credentials', 'public');
+
+        // Extract using GeminiService
+        $geminiService = app(GeminiService::class);
+        $filePath = storage_path('app/public/' . $path);
+        
+        $info = $geminiService->extractCredentialInfo(
+            $filePath,
+            $request->document_type,
+            $request->file('document')->getClientOriginalName()
+        );
+
+        $expiryDate = null;
+        if (!empty($info['expiry_date'])) {
+            try {
+                $expiryDate = Carbon::parse($info['expiry_date']);
+            } catch (\Exception $e) {
+                // ignore invalid date parse errors
+            }
+        }
+
+        // Set status
+        $status = 'verified';
+        if ($expiryDate && $expiryDate->isPast()) {
+            $status = 'rejected';
+        }
+
+        // Save
+        Credential::updateOrCreate([
+            'teacher_profile_id' => $teacherProfile->id,
+            'document_type' => $request->document_type,
+        ], [
+            'document_path' => $path,
+            'extracted_info' => $info,
+            'verification_status' => $status,
+            'expiry_date' => $expiryDate,
+        ]);
+
+        if ($status === 'rejected') {
+            return redirect()->route('teacher.dashboard')->with('error', 'Credential uploaded, but flagged as EXPIRED/INVALID by AI auditor.');
+        }
+
+        return redirect()->route('teacher.dashboard')->with('success', 'Credential uploaded and parsed successfully by AI Auditor!');
     }
 }

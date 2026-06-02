@@ -35,6 +35,7 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     Route::get('/dashboard', [DashboardController::class, 'teacherDashboard'])->name('dashboard');
     Route::post('/preferences', [DashboardController::class, 'updatePreferences'])->name('preferences.update');
     Route::post('/book/{id}', [DashboardController::class, 'bookJob'])->name('book');
+    Route::post('/credentials', [DashboardController::class, 'storeCredential'])->name('credentials.store');
 });
 
 Route::middleware('auth')->group(function () {

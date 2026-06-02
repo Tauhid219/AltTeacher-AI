@@ -51,10 +51,10 @@ Here is the phase-by-phase development plan. We will execute one phase at a time
 - `[x]` Build Calendar view showing booking schedules using FullCalendar.js inside the AdminLTE dashboard.
 
 ### Phase 5: AI-Assisted Document Verification & Onboarding
-- `[ ]` Create document upload form for Teacher Credentials (teaching license, ID, background checks).
-- `[ ]` Build Gemini API client integration wrapper with environment variables (`GEMINI_API_KEY`) and a high-fidelity local Mock AI fallback.
-- `[ ]` Build AI Certificate Verification service using Gemini to parse uploaded credentials and extract details (name, license ID, expiry date).
-- `[ ]` Setup automatic compliance check (flagging expired licenses or blocking bookings for non-compliant teachers).
+- `[x]` Create document upload form for Teacher Credentials (teaching license, ID, background checks).
+- `[x]` Build Gemini API client integration wrapper with environment variables (`GEMINI_API_KEY`) and a high-fidelity local Mock AI fallback.
+- `[x]` Build AI Certificate Verification service using Gemini to parse uploaded credentials and extract details (name, license ID, expiry date).
+- `[x]` Setup automatic compliance check (flagging expired licenses or blocking bookings for non-compliant teachers).
 
 ### Phase 6: AI-Assisted Lesson Continuity & Classroom Prep
 - `[ ]` Build lesson plan upload system for School Admins when booking jobs.
