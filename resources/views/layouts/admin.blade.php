@@ -25,6 +25,9 @@
             const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             if (isDark) {
                 document.documentElement.classList.add('dark-mode');
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.body.classList.add('dark-mode');
+                });
             } else {
                 document.documentElement.classList.remove('dark-mode');
             }
@@ -32,7 +35,7 @@
     </script>
     <style>
         /* Custom dark-mode overrides for AdminLTE */
-        .dark-mode body {
+        .dark-mode body, body.dark-mode {
             background-color: #454d55 !important;
             color: #fff;
         }
@@ -221,13 +224,15 @@
                 isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             }
 
-            // Apply Body Class
+            // Apply Body and HTML Class
             if (isDark) {
                 body.addClass('dark-mode');
+                $('html').addClass('dark-mode');
                 navbar.removeClass('navbar-white navbar-light').addClass('navbar-dark bg-dark');
                 sidebar.removeClass('sidebar-light-primary').addClass('sidebar-dark-primary');
             } else {
                 body.removeClass('dark-mode');
+                $('html').removeClass('dark-mode');
                 navbar.removeClass('navbar-dark bg-dark').addClass('navbar-white navbar-light');
                 sidebar.removeClass('sidebar-dark-primary').addClass('sidebar-light-primary');
             }

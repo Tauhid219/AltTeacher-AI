@@ -535,4 +535,27 @@ class DashboardController extends Controller
 
         return redirect()->route('school.dashboard')->with('error', 'Timesheet was rejected.');
     }
+
+    /**
+     * Display the Super Admin Dashboard.
+     */
+    public function superAdminDashboard(): View
+    {
+        $totalUsers = User::count();
+        $totalRoles = \Spatie\Permission\Models\Role::count();
+        $totalJobs = SubstituteJob::count();
+        $totalDistricts = \App\Models\District::count();
+
+        $users = User::with('roles')->orderBy('created_at', 'desc')->take(5)->get();
+        $roles = \Spatie\Permission\Models\Role::with('permissions')->get();
+
+        return view('admin.dashboard', compact(
+            'totalUsers',
+            'totalRoles',
+            'totalJobs',
+            'totalDistricts',
+            'users',
+            'roles'
+        ));
+    }
 }

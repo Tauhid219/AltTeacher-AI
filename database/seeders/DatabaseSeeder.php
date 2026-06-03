@@ -23,10 +23,28 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 0. Seed Roles
+        // 0. Seed Roles & Permissions
+        $superAdminRole = Role::create(['name' => 'super_admin']);
         $districtAdminRole = Role::create(['name' => 'district_admin']);
         $schoolAdminRole = Role::create(['name' => 'school_admin']);
         $teacherRole = Role::create(['name' => 'teacher']);
+
+        $permissions = [
+            'manage_users',
+            'manage_roles',
+            'verify_teachers',
+            'post_jobs',
+            'book_jobs',
+        ];
+
+        foreach ($permissions as $p) {
+            \Spatie\Permission\Models\Permission::create(['name' => $p]);
+        }
+
+        $superAdminRole->syncPermissions($permissions);
+        $districtAdminRole->givePermissionTo('verify_teachers');
+        $schoolAdminRole->givePermissionTo('post_jobs');
+        $teacherRole->givePermissionTo('book_jobs');
 
         // 1. Seed Districts
         $springfieldDistrict = District::create([
@@ -50,6 +68,14 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 2. Seed Users & Profiles
+
+        // Super Admin
+        $superAdminUser = User::create([
+            'name' => 'System Administrator',
+            'email' => 'admin@example.com',
+            'password' => Hash::make('password'),
+        ]);
+        $superAdminUser->assignRole('super_admin');
 
         // District Admins
         $districtAdminUser = User::create([

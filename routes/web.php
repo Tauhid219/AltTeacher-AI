@@ -10,7 +10,9 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
     $user = auth()->user();
-    if ($user->hasRole('district_admin')) {
+    if ($user->hasRole('super_admin')) {
+        return redirect()->route('admin.dashboard');
+    } elseif ($user->hasRole('district_admin')) {
         return redirect()->route('district.dashboard');
     } elseif ($user->hasRole('school_admin')) {
         return redirect()->route('school.dashboard');
@@ -19,6 +21,12 @@ Route::get('/dashboard', function () {
     }
     abort(403, 'Unauthorized action.');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'superAdminDashboard'])->name('dashboard');
+    Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+    Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
+});
 
 Route::middleware(['auth', 'role:district_admin'])->prefix('district')->name('district.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'districtDashboard'])->name('dashboard');

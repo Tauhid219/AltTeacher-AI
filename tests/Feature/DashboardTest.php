@@ -89,4 +89,60 @@ class DashboardTest extends TestCase
         $response2 = $this->actingAs($teacher)->get('/district/dashboard');
         $response2->assertStatus(403);
     }
+
+    /**
+     * Verify super admin can access admin dashboard, users list, and roles list.
+     */
+    public function test_super_admin_can_access_dashboard_and_manage_users_and_roles(): void
+    {
+        $superAdmin = User::where('email', 'admin@example.com')->first();
+        $this->assertNotNull($superAdmin);
+
+        // Access dashboard
+        $response = $this->actingAs($superAdmin)->get('/admin/dashboard');
+        $response->assertStatus(200);
+        $response->assertSee('System Administrator Dashboard');
+
+        // Access User Management Index
+        $userIndexResponse = $this->actingAs($superAdmin)->get('/admin/users');
+        $userIndexResponse->assertStatus(200);
+        $userIndexResponse->assertSee('User Management');
+        $userIndexResponse->assertSee('chalmers@springfield.edu'); // should list seeded users
+
+        // Access Role Management Index
+        $roleIndexResponse = $this->actingAs($superAdmin)->get('/admin/roles');
+        $roleIndexResponse->assertStatus(200);
+        $roleIndexResponse->assertSee('Role Management');
+        $roleIndexResponse->assertSee('super_admin');
+        $roleIndexResponse->assertSee('teacher');
+    }
+
+    /**
+     * Verify non-super admin users are blocked from admin resources.
+     */
+    public function test_non_super_admins_are_blocked_from_admin_resources(): void
+    {
+        $schoolAdmin = User::where('email', 'skinner@springfield.edu')->first();
+        $this->assertNotNull($schoolAdmin);
+
+        // School Admin cannot access admin dashboard
+        $response1 = $this->actingAs($schoolAdmin)->get('/admin/dashboard');
+        $response1->assertStatus(403);
+
+        // School Admin cannot access user CRUD index
+        $response2 = $this->actingAs($schoolAdmin)->get('/admin/users');
+        $response2->assertStatus(403);
+    }
+
+    /**
+     * Verify super admin dashboard redirect.
+     */
+    public function test_super_admin_redirects_to_admin_dashboard(): void
+    {
+        $superAdmin = User::where('email', 'admin@example.com')->first();
+        $this->assertNotNull($superAdmin);
+
+        $response = $this->actingAs($superAdmin)->get('/dashboard');
+        $response->assertRedirect(route('admin.dashboard'));
+    }
 }
