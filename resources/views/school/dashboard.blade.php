@@ -134,7 +134,20 @@
                         @csrf
                         <div class="form-group">
                             <label for="subject">Subject</label>
-                            <input type="text" name="subject" class="form-control @error('subject') is-invalid @enderror" id="subject" placeholder="e.g. Mathematics, Biology" required>
+                            <select name="subject" id="subject" class="form-control @error('subject') is-invalid @enderror" required>
+                                <option value="" disabled selected>Select Subject...</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Science">Science</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Biology">Biology</option>
+                                <option value="Physics">Physics</option>
+                                <option value="English">English</option>
+                                <option value="History">History</option>
+                                <option value="Art">Art</option>
+                                <option value="Music">Music</option>
+                                <option value="Drama">Drama</option>
+                                <option value="Physical Education">Physical Education</option>
+                            </select>
                             @error('subject')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
