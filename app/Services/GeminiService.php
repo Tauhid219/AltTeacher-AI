@@ -109,6 +109,25 @@ class GeminiService
             }
         }
 
+        // Check if the filename contains at least one positive keyword that suggests it is a valid document
+        $validKeywords = ['license', 'check', 'id', 'cert', 'doc', 'credential', 'expired', 'stl', 'bc'];
+        $hasValidKeyword = false;
+        foreach ($validKeywords as $keyword) {
+            if (str_contains($searchStringLower, $keyword)) {
+                $hasValidKeyword = true;
+                break;
+            }
+        }
+
+        if (!$hasValidKeyword) {
+            return [
+                'name' => null,
+                'license_number' => null,
+                'issue_date' => null,
+                'expiry_date' => null,
+            ];
+        }
+
         $isExpired = str_contains($searchStringLower, 'expired');
         $expiryDate = $isExpired
             ? Carbon::now()->subMonths(2)->format('Y-m-d')

@@ -166,4 +166,28 @@ class CredentialVerificationTest extends TestCase
             'verification_status' => 'rejected',
         ]);
     }
+
+    /**
+     * Uploading a generic PDF without valid document keywords gets rejected.
+     */
+    public function test_generic_pdf_without_keywords_gets_rejected(): void
+    {
+        $teacherUser = User::where('email', 'bob@example.com')->first();
+        $teacherProfile = $teacherUser->teacherProfile;
+
+        $response = $this->actingAs($teacherUser)->post('/teacher/credentials', [
+            'document_type' => 'state_teaching_license',
+            'document' => UploadedFile::fake()->create('random_notes.pdf', 300, 'application/pdf'),
+        ]);
+
+        $response->assertRedirect(route('teacher.dashboard'));
+        $response->assertSessionHas('error');
+        $this->assertStringContainsString('flagged as INVALID or mismatched by AI Auditor', session('error'));
+
+        $this->assertDatabaseHas('credentials', [
+            'teacher_profile_id' => $teacherProfile->id,
+            'document_type' => 'state_teaching_license',
+            'verification_status' => 'rejected',
+        ]);
+    }
 }
