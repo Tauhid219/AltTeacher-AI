@@ -142,4 +142,28 @@ class CredentialVerificationTest extends TestCase
         $openJob->refresh();
         $this->assertEquals('filled', $openJob->status);
     }
+
+    /**
+     * Uploading an invalid/unrelated document gets rejected.
+     */
+    public function test_invalid_document_gets_rejected(): void
+    {
+        $teacherUser = User::where('email', 'bob@example.com')->first();
+        $teacherProfile = $teacherUser->teacherProfile;
+
+        $response = $this->actingAs($teacherUser)->post('/teacher/credentials', [
+            'document_type' => 'state_teaching_license',
+            'document' => UploadedFile::fake()->create('favicon.png', 10, 'image/png'),
+        ]);
+
+        $response->assertRedirect(route('teacher.dashboard'));
+        $response->assertSessionHas('error');
+        $this->assertStringContainsString('flagged as INVALID or mismatched by AI Auditor', session('error'));
+
+        $this->assertDatabaseHas('credentials', [
+            'teacher_profile_id' => $teacherProfile->id,
+            'document_type' => 'state_teaching_license',
+            'verification_status' => 'rejected',
+        ]);
+    }
 }

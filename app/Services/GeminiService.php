@@ -94,7 +94,22 @@ class GeminiService
     {
         // Check if filename contains 'expired' to return an expired credential for compliance testing
         $searchString = $originalName ?: basename($filePath);
-        $isExpired = str_contains(strtolower($searchString), 'expired');
+        $searchStringLower = strtolower($searchString);
+
+        // Check if the file is a favicon, logo, avatar, icon, image, or generic non-credential file
+        $invalidKeywords = ['favicon', 'logo', 'avatar', 'icon', 'image', 'invalid'];
+        foreach ($invalidKeywords as $keyword) {
+            if (str_contains($searchStringLower, $keyword)) {
+                return [
+                    'name' => null,
+                    'license_number' => null,
+                    'issue_date' => null,
+                    'expiry_date' => null,
+                ];
+            }
+        }
+
+        $isExpired = str_contains($searchStringLower, 'expired');
         $expiryDate = $isExpired
             ? Carbon::now()->subMonths(2)->format('Y-m-d')
             : Carbon::now()->addYears(2)->format('Y-m-d');

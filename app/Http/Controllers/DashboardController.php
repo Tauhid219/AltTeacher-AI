@@ -378,8 +378,14 @@ class DashboardController extends Controller
 
         // Set status
         $status = 'verified';
-        if ($expiryDate && $expiryDate->isPast()) {
+        $errorMessage = null;
+
+        if (empty($info['name']) || empty($info['license_number'])) {
             $status = 'rejected';
+            $errorMessage = 'Credential uploaded, but flagged as INVALID or mismatched by AI Auditor. Please ensure the document is clear and matches the selected type.';
+        } elseif ($expiryDate && $expiryDate->isPast()) {
+            $status = 'rejected';
+            $errorMessage = 'Credential uploaded, but flagged as EXPIRED by AI auditor.';
         }
 
         // Save
@@ -394,7 +400,7 @@ class DashboardController extends Controller
         ]);
 
         if ($status === 'rejected') {
-            return redirect()->route('teacher.dashboard')->with('error', 'Credential uploaded, but flagged as EXPIRED/INVALID by AI auditor.');
+            return redirect()->route('teacher.dashboard')->with('error', $errorMessage);
         }
 
         return redirect()->route('teacher.dashboard')->with('success', 'Credential uploaded and parsed successfully by AI Auditor!');
