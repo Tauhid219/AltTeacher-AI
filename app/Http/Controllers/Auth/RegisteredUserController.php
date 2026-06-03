@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\SchoolProfile;
+use App\Models\TeacherProfile;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -48,14 +50,14 @@ class RegisteredUserController extends Controller
 
         // Create Profile based on Role
         if ($request->role === 'teacher') {
-            \App\Models\TeacherProfile::create([
+            TeacherProfile::create([
                 'user_id' => $user->id,
                 'onboarding_status' => 'pending',
             ]);
         } elseif ($request->role === 'school_admin') {
-            \App\Models\SchoolProfile::create([
+            SchoolProfile::create([
                 'user_id' => $user->id,
-                'school_name' => $user->name . ' School',
+                'school_name' => $user->name.' School',
             ]);
         }
 

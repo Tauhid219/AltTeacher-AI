@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -12,7 +13,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -51,7 +52,7 @@ class User extends Authenticatable
     /**
      * Get the school profile associated with the user.
      */
-    public function schoolProfile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function schoolProfile(): HasOne
     {
         return $this->hasOne(SchoolProfile::class);
     }
@@ -59,7 +60,7 @@ class User extends Authenticatable
     /**
      * Get the teacher profile associated with the user.
      */
-    public function teacherProfile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function teacherProfile(): HasOne
     {
         return $this->hasOne(TeacherProfile::class);
     }

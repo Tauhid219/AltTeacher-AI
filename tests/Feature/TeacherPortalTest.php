@@ -2,11 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\SchoolProfile;
-use App\Models\TeacherProfile;
-use App\Models\SubstituteJob;
 use App\Models\Booking;
+use App\Models\SchoolProfile;
+use App\Models\SubstituteJob;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -53,7 +52,7 @@ class TeacherPortalTest extends TestCase
         $response = $this->actingAs($approvedTeacherUser)->get('/teacher/dashboard');
         $response->assertStatus(200);
         $response->assertSee('Profile Active');
-        
+
         // Assert they see the seeded open job (Science Grade 5) matching their preferences
         $response->assertSee('Science');
         $response->assertSee('Grade 5');
@@ -137,7 +136,7 @@ class TeacherPortalTest extends TestCase
     public function test_pending_teacher_cannot_book_job(): void
     {
         $pendingTeacherUser = User::where('email', 'krusty@example.com')->first();
-        
+
         $job = SubstituteJob::where('status', 'open')->first();
         $this->assertNotNull($job);
 

@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class GeminiService
 {
@@ -25,7 +25,7 @@ class GeminiService
         }
 
         try {
-            if (!file_exists($filePath)) {
+            if (! file_exists($filePath)) {
                 throw new \Exception("File not found at: {$filePath}");
             }
 
@@ -52,34 +52,37 @@ class GeminiService
                                 'inlineData' => [
                                     'mimeType' => $mimeType,
                                     'data' => $fileData,
-                                ]
-                            ]
-                        ]
-                      ]
+                                ],
+                            ],
+                        ],
+                    ],
                 ],
                 'generationConfig' => [
-                    'responseMimeType' => 'application/json'
-                ]
+                    'responseMimeType' => 'application/json',
+                ],
             ]);
 
             if ($response->failed()) {
-                Log::error("Gemini API call failed: " . $response->body());
+                Log::error('Gemini API call failed: '.$response->body());
+
                 return $this->getMockExtraction($filePath, $documentType, $originalName);
             }
 
             $result = $response->json();
             $textResponse = $result['candidates'][0]['content']['parts'][0]['text'] ?? '';
-            
+
             $data = json_decode(trim($textResponse), true);
-            if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
-                Log::warning("Gemini did not return valid JSON: " . $textResponse);
+            if (json_last_error() !== JSON_ERROR_NONE || ! is_array($data)) {
+                Log::warning('Gemini did not return valid JSON: '.$textResponse);
+
                 return $this->getMockExtraction($filePath, $documentType, $originalName);
             }
 
             return $data;
 
         } catch (\Exception $e) {
-            Log::error("Error in Gemini service: " . $e->getMessage());
+            Log::error('Error in Gemini service: '.$e->getMessage());
+
             return $this->getMockExtraction($filePath, $documentType, $originalName);
         }
     }
@@ -92,7 +95,7 @@ class GeminiService
         // Check if filename contains 'expired' to return an expired credential for compliance testing
         $searchString = $originalName ?: basename($filePath);
         $isExpired = str_contains(strtolower($searchString), 'expired');
-        $expiryDate = $isExpired 
+        $expiryDate = $isExpired
             ? Carbon::now()->subMonths(2)->format('Y-m-d')
             : Carbon::now()->addYears(2)->format('Y-m-d');
 
@@ -133,7 +136,7 @@ class GeminiService
             $prompt = "You are an expert substitute teacher assistant. Your task is to generate a comprehensive lesson adaptation packet to help a substitute teacher prepare for a class.
             Class Subject: {$subject}
             Grade Level: {$gradeLevel}
-            Original Lesson Notes/Context: " . ($notesText ?: "No notes provided. Generate a generic standard lesson plan for this subject and grade.");
+            Original Lesson Notes/Context: ".($notesText ?: 'No notes provided. Generate a generic standard lesson plan for this subject and grade.');
 
             $prompt .= "\n\nPlease generate a JSON object with the following keys:
             1. 'summary': A 2-3 sentence overview of what the substitute should focus on and prepare for.
@@ -146,7 +149,7 @@ class GeminiService
             Respond ONLY with a valid JSON block containing these keys. Do not include markdown wrappers like ```json.";
 
             $parts = [
-                ['text' => $prompt]
+                ['text' => $prompt],
             ];
 
             if ($filePath && file_exists($filePath)) {
@@ -156,23 +159,24 @@ class GeminiService
                     'inlineData' => [
                         'mimeType' => $mimeType,
                         'data' => $fileData,
-                    ]
+                    ],
                 ];
             }
 
             $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$this->apiKey}", [
                 'contents' => [
                     [
-                        'parts' => $parts
-                    ]
+                        'parts' => $parts,
+                    ],
                 ],
                 'generationConfig' => [
-                    'responseMimeType' => 'application/json'
-                ]
+                    'responseMimeType' => 'application/json',
+                ],
             ]);
 
             if ($response->failed()) {
-                Log::error("Gemini lesson plan API call failed: " . $response->body());
+                Log::error('Gemini lesson plan API call failed: '.$response->body());
+
                 return $this->getMockLessonPlan($subject, $gradeLevel, $notesText);
             }
 
@@ -180,15 +184,17 @@ class GeminiService
             $textResponse = $result['candidates'][0]['content']['parts'][0]['text'] ?? '';
 
             $data = json_decode(trim($textResponse), true);
-            if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
-                Log::warning("Gemini did not return valid JSON for lesson plan: " . $textResponse);
+            if (json_last_error() !== JSON_ERROR_NONE || ! is_array($data)) {
+                Log::warning('Gemini did not return valid JSON for lesson plan: '.$textResponse);
+
                 return $this->getMockLessonPlan($subject, $gradeLevel, $notesText);
             }
 
             return $data;
 
         } catch (\Exception $e) {
-            Log::error("Error in Gemini lesson plan adaptation: " . $e->getMessage());
+            Log::error('Error in Gemini lesson plan adaptation: '.$e->getMessage());
+
             return $this->getMockLessonPlan($subject, $gradeLevel, $notesText);
         }
     }
@@ -198,23 +204,23 @@ class GeminiService
      */
     protected function getMockLessonPlan(string $subject, string $gradeLevel, ?string $notesText): array
     {
-        $summary = "This is an AI-adapted lesson plan for {$gradeLevel} {$subject} to ensure continuity. " .
-                   "The focus is on maintaining classroom engagement and reinforcing core concepts outlined in: '" . 
-                   ($notesText ?: 'General curriculum instructions') . "'.";
+        $summary = "This is an AI-adapted lesson plan for {$gradeLevel} {$subject} to ensure continuity. ".
+                   "The focus is on maintaining classroom engagement and reinforcing core concepts outlined in: '".
+                   ($notesText ?: 'General curriculum instructions')."'.";
 
         $quizzes = [];
         for ($i = 1; $i <= 10; $i++) {
             $quizzes[] = [
                 'question' => "What is mock question number {$i} for {$subject} ({$gradeLevel})?",
-                'options' => ["Option A", "Option B", "Option C", "Option D"],
-                'answer' => "Option A",
+                'options' => ['Option A', 'Option B', 'Option C', 'Option D'],
+                'answer' => 'Option A',
             ];
         }
 
         $icebreakers = [
             "Introductory Quick-Fire: Ask students to call out one word they associate with {$subject}.",
             "Partner Share: Students turn to their neighbor and explain how {$subject} is used in daily life.",
-            "Subject Hangman: A short word game on the board using key vocabulary terms related to {$gradeLevel} {$subject}."
+            "Subject Hangman: A short word game on the board using key vocabulary terms related to {$gradeLevel} {$subject}.",
         ];
 
         return [

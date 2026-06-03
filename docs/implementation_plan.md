@@ -78,9 +78,9 @@ Here is the phase-by-phase development plan. We will execute one phase at a time
   - **Visualizations**: Renders a Bar Chart (spending per school) and a Doughnut Chart (timesheet status) in `district/dashboard` using Chart.js.
 
 ### Phase 8: Final Review, Testing & Git Push
-- `[ ]` Run Laravel Pint formatting check.
-- `[ ]` Write Pest/PHPUnit tests for core booking and matching flows.
-- `[ ]` Push all completed features to GitHub repo.
+- `[x]` Run Laravel Pint formatting check.
+- `[x]` Write Pest/PHPUnit tests for core booking and matching flows.
+- `[x]` Push all completed features to GitHub repo.
 
 ---
 

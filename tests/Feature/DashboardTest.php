@@ -2,11 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\District;
-use App\Models\SchoolProfile;
 use App\Models\TeacherProfile;
-use App\Models\SubstituteJob;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

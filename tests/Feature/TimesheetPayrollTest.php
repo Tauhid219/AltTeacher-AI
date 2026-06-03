@@ -2,15 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\SchoolProfile;
-use App\Models\TeacherProfile;
-use App\Models\SubstituteJob;
 use App\Models\Booking;
+use App\Models\SubstituteJob;
 use App\Models\Timesheet;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Carbon\Carbon;
 
 class TimesheetPayrollTest extends TestCase
 {
@@ -47,7 +45,7 @@ class TimesheetPayrollTest extends TestCase
         // Clock In
         $checkInTimeStr = Carbon::now()->subHours(8)->toDateTimeString();
         $response = $this->actingAs($teacherUser)->post("/teacher/booking/{$booking->id}/clock-in", [
-            'check_in_time' => $checkInTimeStr
+            'check_in_time' => $checkInTimeStr,
         ]);
 
         $response->assertRedirect(route('teacher.dashboard'));
@@ -75,19 +73,19 @@ class TimesheetPayrollTest extends TestCase
         // Find open job and book it
         $job = SubstituteJob::where('status', 'open')->first();
         $this->actingAs($teacherUser)->post("/teacher/book/{$job->id}");
-        
+
         $booking = Booking::where('substitute_job_id', $job->id)->first();
 
         // Clock in at specific time (e.g., 8.5 hours ago)
         $checkInTime = Carbon::now()->subMinutes(510); // 8.5 hours
         $this->actingAs($teacherUser)->post("/teacher/booking/{$booking->id}/clock-in", [
-            'check_in_time' => $checkInTime->toDateTimeString()
+            'check_in_time' => $checkInTime->toDateTimeString(),
         ]);
 
         // Clock out now
         $checkOutTime = Carbon::now();
         $response = $this->actingAs($teacherUser)->post("/teacher/booking/{$booking->id}/clock-out", [
-            'check_out_time' => $checkOutTime->toDateTimeString()
+            'check_out_time' => $checkOutTime->toDateTimeString(),
         ]);
 
         $response->assertRedirect(route('teacher.dashboard'));
@@ -96,11 +94,11 @@ class TimesheetPayrollTest extends TestCase
         // Verify calculations
         $timesheet = Timesheet::where('booking_id', $booking->id)->first();
         $this->assertNotNull($timesheet);
-        $this->assertEquals(8.50, (float)$timesheet->calculated_hours);
+        $this->assertEquals(8.50, (float) $timesheet->calculated_hours);
 
         // Bob's hourly rate is $35.00
         $expectedPay = round(8.50 * $teacherProfile->hourly_rate, 2);
-        $this->assertEquals($expectedPay, (float)$timesheet->calculated_pay);
+        $this->assertEquals($expectedPay, (float) $timesheet->calculated_pay);
 
         // Verify job and booking status completed
         $booking->refresh();
@@ -127,10 +125,10 @@ class TimesheetPayrollTest extends TestCase
         $booking = Booking::where('substitute_job_id', $job->id)->first();
 
         $this->actingAs($teacherUser)->post("/teacher/booking/{$booking->id}/clock-in", [
-            'check_in_time' => Carbon::now()->subHours(6)->toDateTimeString()
+            'check_in_time' => Carbon::now()->subHours(6)->toDateTimeString(),
         ]);
         $this->actingAs($teacherUser)->post("/teacher/booking/{$booking->id}/clock-out", [
-            'check_out_time' => Carbon::now()->toDateTimeString()
+            'check_out_time' => Carbon::now()->toDateTimeString(),
         ]);
 
         $timesheet = Timesheet::where('booking_id', $booking->id)->first();
@@ -163,10 +161,10 @@ class TimesheetPayrollTest extends TestCase
         $booking = Booking::where('substitute_job_id', $job->id)->first();
 
         $this->actingAs($teacherUser)->post("/teacher/booking/{$booking->id}/clock-in", [
-            'check_in_time' => Carbon::now()->subHours(6)->toDateTimeString()
+            'check_in_time' => Carbon::now()->subHours(6)->toDateTimeString(),
         ]);
         $this->actingAs($teacherUser)->post("/teacher/booking/{$booking->id}/clock-out", [
-            'check_out_time' => Carbon::now()->toDateTimeString()
+            'check_out_time' => Carbon::now()->toDateTimeString(),
         ]);
 
         $timesheet = Timesheet::where('booking_id', $booking->id)->first();
@@ -199,10 +197,10 @@ class TimesheetPayrollTest extends TestCase
         $booking = Booking::where('substitute_job_id', $job->id)->first();
 
         $this->actingAs($teacherUser)->post("/teacher/booking/{$booking->id}/clock-in", [
-            'check_in_time' => Carbon::now()->subHours(6)->toDateTimeString()
+            'check_in_time' => Carbon::now()->subHours(6)->toDateTimeString(),
         ]);
         $this->actingAs($teacherUser)->post("/teacher/booking/{$booking->id}/clock-out", [
-            'check_out_time' => Carbon::now()->toDateTimeString()
+            'check_out_time' => Carbon::now()->toDateTimeString(),
         ]);
 
         $timesheet = Timesheet::where('booking_id', $booking->id)->first();

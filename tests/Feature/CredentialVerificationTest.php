@@ -2,16 +2,14 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\SchoolProfile;
-use App\Models\TeacherProfile;
-use App\Models\SubstituteJob;
 use App\Models\Credential;
+use App\Models\SubstituteJob;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
-use Carbon\Carbon;
 
 class CredentialVerificationTest extends TestCase
 {
@@ -132,7 +130,7 @@ class CredentialVerificationTest extends TestCase
 
         // Bob has both verified teaching license and background check pre-seeded in the database and they are not expired.
         // Thus he is compliant.
-        
+
         $openJob = SubstituteJob::where('status', 'open')->first();
         $this->assertNotNull($openJob);
 

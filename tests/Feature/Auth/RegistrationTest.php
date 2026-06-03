@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -34,12 +35,12 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        
-        $user = \App\Models\User::where('email', 'newteacher@example.com')->first();
+
+        $user = User::where('email', 'newteacher@example.com')->first();
         $this->assertNotNull($user);
         $this->assertTrue($user->hasRole('teacher'));
         $this->assertNotNull($user->teacherProfile);
-        
+
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
@@ -54,13 +55,13 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        
-        $user = \App\Models\User::where('email', 'newschool@example.com')->first();
+
+        $user = User::where('email', 'newschool@example.com')->first();
         $this->assertNotNull($user);
         $this->assertTrue($user->hasRole('school_admin'));
         $this->assertNotNull($user->schoolProfile);
         $this->assertEquals('New School Admin User School', $user->schoolProfile->school_name);
-        
+
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 }

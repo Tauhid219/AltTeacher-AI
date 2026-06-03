@@ -2,18 +2,18 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\District;
-use App\Models\SchoolProfile;
-use App\Models\TeacherProfile;
-use App\Models\Credential;
-use App\Models\SubstituteJob;
 use App\Models\Booking;
-use App\Models\Timesheet;
+use App\Models\Credential;
+use App\Models\District;
 use App\Models\LessonPlan;
+use App\Models\SchoolProfile;
+use App\Models\SubstituteJob;
+use App\Models\TeacherProfile;
+use App\Models\Timesheet;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
@@ -336,7 +336,7 @@ class DatabaseSeeder extends Seeder
         LessonPlan::create([
             'booking_id' => $booking1->id,
             'original_plan_text' => "Original Teacher Notes:\n- Warm-up: 5 minutes review of fractions.\n- Lecture: Explain variable 'x' and coefficient.\n- Practice: Group exercises on page 42 (1 to 15).\n- Homework: Worksheet 7A.",
-            'ai_summary' => "The substitute teacher will introduce variables and coefficients in Algebra for Grade 7. Students should complete practice questions on page 42 after a brief warm-up review.",
+            'ai_summary' => 'The substitute teacher will introduce variables and coefficients in Algebra for Grade 7. Students should complete practice questions on page 42 after a brief warm-up review.',
             'ai_generated_activities' => [
                 'quizzes' => [
                     ['question' => 'What is the coefficient in the term 5x?', 'options' => ['x', '5', '5x', 'none'], 'answer' => '5'],
@@ -375,8 +375,8 @@ class DatabaseSeeder extends Seeder
         ]);
         LessonPlan::create([
             'booking_id' => $booking2->id,
-            'original_plan_text' => "Grade 3 physical theater exercises. Do mirror warmups, and simple roleplay stories.",
-            'ai_summary' => "Substitute teacher will lead physical theater and roleplay storytelling exercises for Grade 3.",
+            'original_plan_text' => 'Grade 3 physical theater exercises. Do mirror warmups, and simple roleplay stories.',
+            'ai_summary' => 'Substitute teacher will lead physical theater and roleplay storytelling exercises for Grade 3.',
             'ai_generated_activities' => [
                 'quizzes' => [
                     ['question' => 'What is mime?', 'options' => ['Singing', 'Acting without words', 'Dancing', 'Drawing'], 'answer' => 'Acting without words'],

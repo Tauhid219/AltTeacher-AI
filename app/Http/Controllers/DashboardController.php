@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\TeacherProfile;
-use App\Models\SchoolProfile;
-use App\Models\SubstituteJob;
 use App\Models\Booking;
-use App\Models\Timesheet;
 use App\Models\Credential;
 use App\Models\LessonPlan;
+use App\Models\SchoolProfile;
+use App\Models\SubstituteJob;
+use App\Models\TeacherProfile;
+use App\Models\Timesheet;
+use App\Models\User;
 use App\Services\GeminiService;
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
@@ -28,10 +30,10 @@ class DashboardController extends Controller
 
         // If user registers as school admin, they will have a schoolProfile.
         // If profile is missing (e.g. seeded error), handle gracefully.
-        if (!$schoolProfile) {
+        if (! $schoolProfile) {
             $schoolProfile = SchoolProfile::create([
                 'user_id' => $schoolUser->id,
-                'school_name' => $schoolUser->name . ' School',
+                'school_name' => $schoolUser->name.' School',
             ]);
         }
 
@@ -49,8 +51,8 @@ class DashboardController extends Controller
         $monthSpend = Timesheet::whereHas('booking.substituteJob', function ($query) use ($schoolProfile) {
             $query->where('school_profile_id', $schoolProfile->id);
         })->where('status', 'approved')
-          ->whereBetween('updated_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
-          ->sum('calculated_pay');
+            ->whereBetween('updated_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
+            ->sum('calculated_pay');
 
         $jobs = SubstituteJob::where('school_profile_id', $schoolProfile->id)
             ->with(['booking.teacherProfile.user'])
@@ -61,8 +63,8 @@ class DashboardController extends Controller
         $timesheets = Timesheet::whereHas('booking.substituteJob', function ($query) use ($schoolProfile) {
             $query->where('school_profile_id', $schoolProfile->id);
         })->with(['booking.teacherProfile.user', 'booking.substituteJob'])
-          ->orderBy('created_at', 'desc')
-          ->get();
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view('school.dashboard', compact(
             'schoolProfile',
@@ -183,7 +185,7 @@ class DashboardController extends Controller
         $teacherUser = auth()->user();
         $teacherProfile = $teacherUser->teacherProfile;
 
-        if (!$teacherProfile) {
+        if (! $teacherProfile) {
             $teacherProfile = TeacherProfile::create([
                 'user_id' => $teacherUser->id,
                 'hourly_rate' => 30.00,
@@ -239,7 +241,7 @@ class DashboardController extends Controller
     public function updatePreferences(Request $request): RedirectResponse
     {
         $teacherProfile = auth()->user()->teacherProfile;
-        if (!$teacherProfile) {
+        if (! $teacherProfile) {
             return redirect()->route('teacher.dashboard')->with('error', 'Profile not found.');
         }
 
@@ -259,7 +261,7 @@ class DashboardController extends Controller
                 'grades' => $request->grades ?? [],
                 'subjects' => $request->subjects ?? [],
                 'preferred_schools' => array_map('intval', $request->preferred_schools ?? []),
-            ]
+            ],
         ]);
 
         return redirect()->route('teacher.dashboard')->with('success', 'Preferences updated successfully!');
@@ -271,7 +273,7 @@ class DashboardController extends Controller
     public function bookJob(int $id): RedirectResponse
     {
         $teacherProfile = auth()->user()->teacherProfile;
-        if (!$teacherProfile || $teacherProfile->onboarding_status !== 'approved') {
+        if (! $teacherProfile || $teacherProfile->onboarding_status !== 'approved') {
             return redirect()->route('teacher.dashboard')->with('error', 'You must be approved to book jobs.');
         }
 
@@ -288,12 +290,12 @@ class DashboardController extends Controller
                     ->where('verification_status', 'verified')
                     ->where(function ($query) {
                         $query->whereNull('expiry_date')
-                              ->orWhere('expiry_date', '>=', Carbon::now()->toDateString());
+                            ->orWhere('expiry_date', '>=', Carbon::now()->toDateString());
                     })
                     ->first();
 
-                if (!$credential) {
-                    return redirect()->route('teacher.dashboard')->with('error', 'Booking blocked: You are non-compliant. Please ensure you have uploaded a valid, non-expired ' . str_replace('_', ' ', $docType) . '.');
+                if (! $credential) {
+                    return redirect()->route('teacher.dashboard')->with('error', 'Booking blocked: You are non-compliant. Please ensure you have uploaded a valid, non-expired '.str_replace('_', ' ', $docType).'.');
                 }
             }
         }
@@ -315,8 +317,8 @@ class DashboardController extends Controller
 
         // Generate and store AI Adapted Lesson Plan
         $geminiService = app(GeminiService::class);
-        $filePath = $job->lesson_plan_file ? storage_path('app/public/' . $job->lesson_plan_file) : null;
-        
+        $filePath = $job->lesson_plan_file ? storage_path('app/public/'.$job->lesson_plan_file) : null;
+
         $aiAdaptedData = $geminiService->generateAdaptedLessonPlan(
             $job->subject,
             $job->grade_level,
@@ -343,7 +345,7 @@ class DashboardController extends Controller
     public function storeCredential(Request $request): RedirectResponse
     {
         $teacherProfile = auth()->user()->teacherProfile;
-        if (!$teacherProfile) {
+        if (! $teacherProfile) {
             return redirect()->route('teacher.dashboard')->with('error', 'Profile not found.');
         }
 
@@ -357,8 +359,8 @@ class DashboardController extends Controller
 
         // Extract using GeminiService
         $geminiService = app(GeminiService::class);
-        $filePath = storage_path('app/public/' . $path);
-        
+        $filePath = storage_path('app/public/'.$path);
+
         $info = $geminiService->extractCredentialInfo(
             $filePath,
             $request->document_type,
@@ -366,7 +368,7 @@ class DashboardController extends Controller
         );
 
         $expiryDate = null;
-        if (!empty($info['expiry_date'])) {
+        if (! empty($info['expiry_date'])) {
             try {
                 $expiryDate = Carbon::parse($info['expiry_date']);
             } catch (\Exception $e) {
@@ -401,10 +403,10 @@ class DashboardController extends Controller
     /**
      * Download AI Adapted Lesson Plan as a PDF.
      */
-    public function downloadLessonPlanPdf(int $bookingId): \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+    public function downloadLessonPlanPdf(int $bookingId): Response|RedirectResponse
     {
         $teacherProfile = auth()->user()->teacherProfile;
-        if (!$teacherProfile) {
+        if (! $teacherProfile) {
             return redirect()->route('teacher.dashboard')->with('error', 'Profile not found.');
         }
 
@@ -413,11 +415,12 @@ class DashboardController extends Controller
             ->findOrFail($bookingId);
 
         $lessonPlan = $booking->lessonPlan;
-        if (!$lessonPlan) {
+        if (! $lessonPlan) {
             return redirect()->back()->with('error', 'Lesson plan not found.');
         }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.lesson_plan', compact('booking', 'lessonPlan'));
+        $pdf = Pdf::loadView('pdf.lesson_plan', compact('booking', 'lessonPlan'));
+
         return $pdf->download("lesson_plan_booking_{$booking->id}.pdf");
     }
 
@@ -427,7 +430,7 @@ class DashboardController extends Controller
     public function clockIn(Request $request, int $bookingId): RedirectResponse
     {
         $teacherProfile = auth()->user()->teacherProfile;
-        if (!$teacherProfile) {
+        if (! $teacherProfile) {
             return redirect()->route('teacher.dashboard')->with('error', 'Profile not found.');
         }
 
@@ -454,7 +457,7 @@ class DashboardController extends Controller
     public function clockOut(Request $request, int $bookingId): RedirectResponse
     {
         $teacherProfile = auth()->user()->teacherProfile;
-        if (!$teacherProfile) {
+        if (! $teacherProfile) {
             return redirect()->route('teacher.dashboard')->with('error', 'Profile not found.');
         }
 
@@ -463,7 +466,7 @@ class DashboardController extends Controller
             ->findOrFail($bookingId);
 
         $timesheet = $booking->timesheet;
-        if (!$timesheet || !$timesheet->check_in_time) {
+        if (! $timesheet || ! $timesheet->check_in_time) {
             return redirect()->route('teacher.dashboard')->with('error', 'You must clock in first.');
         }
 
@@ -476,7 +479,7 @@ class DashboardController extends Controller
 
         $secondsDiff = $checkOutTime->diffInSeconds($checkInTime, false);
         $calculatedHours = abs(round($secondsDiff / 3600, 2));
-        
+
         $hourlyRate = $teacherProfile->hourly_rate ?: 30.00;
         $calculatedPay = round($calculatedHours * $hourlyRate, 2);
 
@@ -501,7 +504,7 @@ class DashboardController extends Controller
     public function approveTimesheet(int $timesheetId): RedirectResponse
     {
         $schoolProfile = auth()->user()->schoolProfile;
-        if (!$schoolProfile) {
+        if (! $schoolProfile) {
             return redirect()->route('school.dashboard')->with('error', 'School profile not found.');
         }
 
@@ -520,7 +523,7 @@ class DashboardController extends Controller
     public function rejectTimesheet(int $timesheetId): RedirectResponse
     {
         $schoolProfile = auth()->user()->schoolProfile;
-        if (!$schoolProfile) {
+        if (! $schoolProfile) {
             return redirect()->route('school.dashboard')->with('error', 'School profile not found.');
         }
 

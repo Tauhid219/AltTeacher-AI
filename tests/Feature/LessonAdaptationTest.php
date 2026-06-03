@@ -2,17 +2,15 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\SchoolProfile;
-use App\Models\TeacherProfile;
-use App\Models\SubstituteJob;
 use App\Models\Booking;
 use App\Models\LessonPlan;
+use App\Models\SubstituteJob;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
-use Carbon\Carbon;
 
 class LessonAdaptationTest extends TestCase
 {
@@ -47,12 +45,12 @@ class LessonAdaptationTest extends TestCase
         ]);
 
         $response->assertRedirect(route('school.dashboard'));
-        
+
         // Assert job exists in database and has file path
         $job = SubstituteJob::where('subject', 'Physics')->first();
         $this->assertNotNull($job);
         $this->assertNotNull($job->lesson_plan_file);
-        
+
         // Assert file exists in storage
         Storage::disk('public')->assertExists($job->lesson_plan_file);
     }
@@ -88,7 +86,7 @@ class LessonAdaptationTest extends TestCase
         $lessonPlan = LessonPlan::where('booking_id', $booking->id)->first();
         $this->assertNotNull($lessonPlan);
         $this->assertNotEmpty($lessonPlan->ai_summary);
-        
+
         $activities = $lessonPlan->ai_generated_activities;
         $this->assertIsArray($activities);
         $this->assertArrayHasKey('quizzes', $activities);
@@ -112,7 +110,7 @@ class LessonAdaptationTest extends TestCase
         $booking = Booking::where('teacher_profile_id', $teacherUser->teacherProfile->id)
             ->whereHas('lessonPlan')
             ->first();
-        
+
         $this->assertNotNull($booking);
         $this->assertNotNull($booking->lessonPlan);
 
@@ -122,6 +120,6 @@ class LessonAdaptationTest extends TestCase
         // Assert response is successful and has correct content headers
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'application/pdf');
-        $response->assertHeader('Content-Disposition', 'attachment; filename=lesson_plan_booking_' . $booking->id . '.pdf');
+        $response->assertHeader('Content-Disposition', 'attachment; filename=lesson_plan_booking_'.$booking->id.'.pdf');
     }
 }
